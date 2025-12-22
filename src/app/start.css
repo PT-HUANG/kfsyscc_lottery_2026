@@ -1,0 +1,282 @@
+/* Floating circles animation - Japanese gacha style */
+.circle-float {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: float 8s ease-in-out infinite;
+}
+
+.circle-1 {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #ff6b9d, #ffc371);
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #84fab0, #8fd3f4);
+  top: 60%;
+  left: 80%;
+  animation-delay: 1s;
+}
+
+.circle-3 {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #ffecd2, #fcb69f);
+  top: 30%;
+  right: 15%;
+  animation-delay: 2s;
+}
+
+.circle-4 {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #a8edea, #fed6e3);
+  bottom: 20%;
+  left: 20%;
+  animation-delay: 1.5s;
+}
+
+.circle-5 {
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(135deg, #fff1eb, #ace0f9);
+  top: 70%;
+  right: 25%;
+  animation-delay: 3s;
+}
+
+.circle-6 {
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  top: 15%;
+  left: 50%;
+  animation-delay: 2.5s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  25% {
+    transform: translateY(-30px) translateX(20px) scale(1.1);
+  }
+  50% {
+    transform: translateY(-50px) translateX(-20px) scale(0.95);
+  }
+  75% {
+    transform: translateY(-30px) translateX(30px) scale(1.05);
+  }
+}
+
+/* Stars animation */
+.star {
+  position: absolute;
+  font-size: 2rem;
+  color: #ffd700;
+  animation: twinkle 2s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.star-1 {
+  top: 15%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.star-2 {
+  top: 25%;
+  right: 15%;
+  animation-delay: 0.5s;
+}
+
+.star-3 {
+  bottom: 30%;
+  left: 15%;
+  animation-delay: 1s;
+}
+
+.star-4 {
+  top: 60%;
+  right: 20%;
+  animation-delay: 1.5s;
+}
+
+.star-5 {
+  bottom: 15%;
+  right: 30%;
+  animation-delay: 2s;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8) rotate(180deg);
+  }
+}
+
+/* Title styles - cute Japanese style */
+.title-container {
+  position: relative;
+  display: inline-block;
+}
+
+.title-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+  animation: title-bounce 2s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes title-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Subtitle styles */
+.subtitle-text {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: subtitle-fade 3s ease-in-out infinite;
+}
+
+@keyframes subtitle-fade {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Start button - gacha machine inspired */
+.start-button {
+  position: relative;
+  padding: 1.5rem 4rem;
+  font-size: 2rem;
+  font-weight: 900;
+  color: white;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ffd700 100%);
+  border: 6px solid white;
+  border-radius: 9999px;
+  box-shadow:
+    0 10px 30px rgba(245, 87, 108, 0.4),
+    0 0 0 4px #f5576c,
+    inset 0 -8px 0 rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: button-pulse 2s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.start-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.start-button:hover::before {
+  left: 100%;
+}
+
+.start-button:hover {
+  transform: scale(1.1) translateY(-5px);
+  box-shadow:
+    0 15px 40px rgba(245, 87, 108, 0.6),
+    0 0 0 4px #f5576c,
+    inset 0 -8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.start-button:active {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow:
+    0 5px 20px rgba(245, 87, 108, 0.4),
+    0 0 0 4px #f5576c,
+    inset 0 -4px 0 rgba(0, 0, 0, 0.2);
+}
+
+@keyframes button-pulse {
+  0%, 100% {
+    box-shadow:
+      0 10px 30px rgba(245, 87, 108, 0.4),
+      0 0 0 4px #f5576c,
+      inset 0 -8px 0 rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 10px 40px rgba(245, 87, 108, 0.6),
+      0 0 0 4px #f5576c,
+      0 0 20px rgba(255, 215, 0, 0.4),
+      inset 0 -8px 0 rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Gentle animations for emojis */
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 4s linear infinite;
+  display: inline-block;
+}
+
+/* Machine decoration animation */
+.machine-decoration {
+  animation: machine-shake 3s ease-in-out infinite;
+}
+
+@keyframes machine-shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
