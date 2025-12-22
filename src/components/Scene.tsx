@@ -1,39 +1,38 @@
 "use client";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { useGLTF, OrbitControls, Center, Environment } from "@react-three/drei";
-import { useRef } from "react";
-import type { Mesh, Group } from "three";
+import { useRef, useEffect } from "react";
+import type { Group } from "three";
+import FloatingText from "@/components/FloatingText";
+import CameraAnimation from "@/components/CameraAnimation";
 
-function GachaModel() {
+function GachaModel({ onLoad }: { onLoad?: () => void }) {
   const { scene } = useGLTF("/models/gacha.gltf");
   const groupRef = useRef<Group>(null);
+  const hasCalledOnLoad = useRef(false);
+
+  useEffect(() => {
+    // 模型加载完成后通知父组件（只调用一次）
+    if (scene && onLoad && !hasCalledOnLoad.current) {
+      console.log("GLTF scene loaded!", scene);
+      hasCalledOnLoad.current = true;
+      onLoad();
+    }
+  }, [scene, onLoad]);
 
   return (
     <Center>
-      <primitive ref={groupRef} object={scene} scale={15} />
+      <primitive ref={groupRef} object={scene} scale={12} />
+      {/* 漂浮的3D文字 */}
+      <FloatingText />
     </Center>
   );
 }
 
-function RotatingBox() {
-  const meshRef = useRef<Mesh>(null);
+// 预加载GLTF模型
+useGLTF.preload("/models/gacha.gltf");
 
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += delta;
-      meshRef.current.rotation.y += delta * 0.5;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef}>
-      <boxGeometry />
-      <meshNormalMaterial />
-    </mesh>
-  );
-}
-
-export default function Scene() {
+export default function Scene({ onReadyAction }: { onReadyAction?: () => void }) {
   return (
     <div
       style={{
@@ -48,10 +47,13 @@ export default function Scene() {
       }}
     >
       <Canvas
-        camera={{ fov: 65, near: 0.01, far: 1000, position: [0, 2, 10] }}
+        camera={{ fov: 65, near: 0.01, far: 1000, position: [0, 2, 25] }}
         gl={{ toneMappingExposure: 1.2 }}
       >
         <color attach="background" args={["#e8f4f8"]} />
+
+        {/* Camera拉近动画 */}
+        <CameraAnimation />
 
         {/* HDR 環境照明 - 增加強度讓顏色更飽和 */}
         <Environment preset="sunset" environmentIntensity={1.5} />
@@ -66,7 +68,7 @@ export default function Scene() {
         <pointLight position={[-3, 2, -2]} intensity={0.5} color="#ffd6a5" />
 
         {/* GLTF 模型 */}
-        <GachaModel />
+        <GachaModel onLoad={onReadyAction} />
 
         {/* 轨道控制器 */}
         <OrbitControls
