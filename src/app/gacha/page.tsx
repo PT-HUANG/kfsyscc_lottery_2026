@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
 import Scene from "@/components/Scene";
+import { Button } from "@/components/ui/button";
+import { useAnimationStore } from "@/stores/useAnimationStore";
 import "./loading.css";
 
 function RotatingBox() {
@@ -58,6 +60,9 @@ export default function GachaPage() {
   const [progress, setProgress] = useState(0);
   const [sceneReady, setSceneReady] = useState(false);
 
+  // 使用 Zustand store
+  const { isAnimating, toggleAnimation } = useAnimationStore();
+
   useEffect(() => {
     // 模拟加载进度
     const interval = setInterval(() => {
@@ -108,6 +113,32 @@ export default function GachaPage() {
       >
         <Scene onReadyAction={handleSceneReady} />
       </div>
+
+      {/* 控制按钮 */}
+      {!loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            zIndex: 100,
+          }}
+        >
+          <Button
+            onClick={toggleAnimation}
+            size="lg"
+            variant={isAnimating ? "default" : "outline"}
+            style={{
+              minWidth: "120px",
+              fontSize: "16px",
+              fontWeight: "600",
+            }}
+          >
+            {isAnimating ? "⏸ 暫停" : "▶ 播放"}
+          </Button>
+        </div>
+      )}
+
       {/* Loading覆盖在上面 */}
       {loading && (
         <div style={{ position: "fixed", top: 0, left: 0, zIndex: 10 }}>
