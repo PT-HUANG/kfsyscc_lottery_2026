@@ -17,11 +17,23 @@ function easeInOutQuad(t: number): number {
 }
 
 // ==================== 常量定义 ====================
+const gachaColors = [
+  "#FF6B6B", // 活力紅
+  "#FFD93D", // 黃金亮黃
+  "#6BCB77", // 清新綠
+  "#4D96FF", // 明亮藍
+  "#FF9F1C", // 橘色能量
+  "#845EC2", // 紫色夢幻
+  "#FF70A6", // 粉色可愛
+  "#00C9A7", // 青綠活力
+  "#F9F871", // 柔和亮黃
+  "#FFAB76", // 甜橘
+];
 const GACHA_MACHINE_CONFIG = {
   // 调整物理边界相对于模型的位置
   // 注意：这些值是基于模型本身的坐标系
   boundsPosition: [0.6, 0.45, -0.5] as [number, number, number],
-  boundsSize: [0.28, 0.28, 0.25] as [number, number, number],
+  boundsSize: [0.3, 0.3, 0.3] as [number, number, number],
   modelScale: 12,
   // 手动调整模型位置以补偿几何中心的偏移，让它在视野中心
   // 如果模型在右上角，需要向左下移动（-x, -y）
@@ -66,31 +78,32 @@ interface PhysicsCapsulesProps {
 function PhysicsCapsules({ capsules }: PhysicsCapsulesProps) {
   return (
     <>
-      {capsules.map((capsule, index) => (
-        <RigidBody
-          key={index}
-          position={capsule.position.toArray() as [number, number, number]}
-          restitution={0.5}
-          friction={1.0}
-          mass={0.2}
-          colliders="ball"
-          type="dynamic"
-          gravityScale={1}
-          linearDamping={0.2}
-          angularDamping={0.2}
-        >
-          <mesh castShadow receiveShadow>
-            <sphereGeometry args={[0.25, 16, 16]} />
-            <meshStandardMaterial
-              color={
-                (capsule.mesh.material as THREE.MeshStandardMaterial).color
-              }
-              metalness={0.2}
-              roughness={0.4}
-            />
-          </mesh>
-        </RigidBody>
-      ))}
+      {capsules.map((capsule, index) => {
+        const color = gachaColors[index % gachaColors.length];
+        return (
+          <RigidBody
+            key={index}
+            position={capsule.position.toArray() as [number, number, number]}
+            restitution={0.5}
+            friction={1.0}
+            mass={0.2}
+            colliders="ball"
+            type="dynamic"
+            gravityScale={1}
+            linearDamping={0.2}
+            angularDamping={0.2}
+          >
+            <mesh castShadow receiveShadow>
+              <sphereGeometry args={[0.25, 16, 16]} />
+              <meshStandardMaterial
+                color={color}
+                metalness={0.1}
+                roughness={0.1}
+              />
+            </mesh>
+          </RigidBody>
+        );
+      })}
     </>
   );
 }
@@ -426,7 +439,7 @@ export default function Scene({
           color="#ffffff"
         />
         <pointLight position={[-3, 2, -2]} intensity={0.5} color="#ffd6a5" />
-        <Physics gravity={[0, -9.81, 0]} debug>
+        <Physics gravity={[0, -9.81, 0]}>
           <GachaModel onLoad={onReadyAction} />
         </Physics>
         <OrbitControls
