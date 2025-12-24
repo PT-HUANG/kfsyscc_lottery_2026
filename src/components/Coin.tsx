@@ -11,7 +11,7 @@ interface CoinProps {
 }
 
 export default function Coin({
-  position = [0, 10, 0],
+  position = [-0.125, -1, 0],
   visible = true,
   opacity = 1,
 }: CoinProps) {

@@ -17,7 +17,7 @@ interface FloatingTextProps {
 
 export default function FloatingText({
   text = "KFSYSCC",
-  position = [3.75, 8.25, -5],
+  position = [-2.5, 3, 0],
   size = 1,
   color = "#ff1493",
   emissiveColor = "#ff69b4",
