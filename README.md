@@ -1,10 +1,25 @@
-# KFSYSCC 抽獎系統 2026
+# KFSYSCC 3D 扭蛋機抽獎系統 2026
 
-一個基於 Next.js 和 Three.js 構建的互動式 3D 扭蛋機抽獎系統。
+一個專為醫院春酒活動打造的互動式 3D 扭蛋機抽獎系統，結合精美的 3D 動畫與完整的抽獎管理功能。
+
+![Next.js](https://img.shields.io/badge/Next.js-16.1-black)
+![React](https://img.shields.io/badge/React-19-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![Three.js](https://img.shields.io/badge/Three.js-0.182-green)
 
 ## 📋 專案簡介
 
-本專案是一個現代化的網頁抽獎應用，使用 3D 圖形技術打造沉浸式的扭蛋機體驗。透過流暢的相機動畫和精美的 3D 模型，為用戶提供獨特的抽獎互動體驗。
+這是一個現代化的網頁抽獎應用，使用 3D 圖形技術打造沉浸式的扭蛋機體驗。透過流暢的動畫、直覺的操作介面，以及完整的資料管理功能，為春酒等活動提供專業且有趣的抽獎解決方案。
+
+### 🎯 核心特色
+
+- **🎨 精美 3D 動畫** - 真實感的扭蛋機晃動、金幣投入、扭蛋掉落等動畫效果
+- **📊 完整資料管理** - 參與者、獎項、中獎紀錄一站式管理
+- **📁 批次匯入** - 支援 TXT 檔案快速匯入參與者與獎項
+- **🎁 多獎項抽獎** - 可選擇獎項、單次抽一個或抽全部剩餘名額
+- **🔒 防重複中獎** - 自動過濾已中獎者，確保公平性
+- **💾 資料持久化** - 自動儲存，重新整理也不會遺失資料
+- **📤 CSV 匯出** - 一鍵匯出中獎名單，方便後續整理
 
 ## 🚀 技術棧
 
@@ -16,172 +31,316 @@
 ### 3D 圖形
 - **[Three.js](https://threejs.org)** 0.182.0 - WebGL 3D 圖形庫
 - **[React Three Fiber](https://docs.pmnd.rs/react-three-fiber)** 9.4.2 - React 的 Three.js 渲染器
-- **[React Three Drei](https://github.com/pmndrs/drei)** 10.7.7 - React Three Fiber 實用工具集
+- **[React Three Drei](https://github.com/pmndrs/drei)** 10.7.7 - R3F 實用工具集
+- **[@react-three/rapier](https://github.com/pmndrs/react-three-rapier)** - 物理引擎
 
 ### UI 與樣式
 - **[Tailwind CSS](https://tailwindcss.com)** 3.4.19 - 實用優先的 CSS 框架
-- **[Tailwind CSS Animate](https://github.com/jamiebuilds/tailwindcss-animate)** 1.0.7 - Tailwind 動畫插件
-- **[Radix UI](https://www.radix-ui.com)** - 無樣式的 UI 組件庫
+- **[Shadcn UI](https://ui.shadcn.com)** - 基於 Radix UI 的組件庫
 - **[Lucide React](https://lucide.dev)** - 圖標庫
-- **[clsx](https://github.com/lukeed/clsx)** + **[tailwind-merge](https://github.com/dcastil/tailwind-merge)** - 條件式 className 工具
 
 ### 狀態管理
-- **[Zustand](https://zustand-demo.pmnd.rs)** 5.0.9 - 輕量級狀態管理
-
-### 開發工具
-- **[React Compiler](https://react.dev/learn/react-compiler)** - 自動化 React 性能優化
-- **[ESLint](https://eslint.org)** 9 - 程式碼檢查工具
-- **pnpm** - 快速、高效的套件管理器
+- **[Zustand](https://zustand-demo.pmnd.rs)** 5.0.9 + Persist Middleware - 輕量級狀態管理與資料持久化
 
 ## ✨ 功能特性
 
-### 已實現功能
-- ✅ **3D 扭蛋機模型** - 使用 GLTF 格式的精美 3D 模型
-- ✅ **流暢相機動畫** - 開場環繞動畫,展示扭蛋機全貌
-- ✅ **3D 漂浮文字** - 動態的 3D 文字特效
-- ✅ **3D 金幣動畫** - 帶 $ 符號的金色硬幣,支援下落與淡出效果
-- ✅ **扭蛋機晃動動畫** - 多軸旋轉與位移的真實晃動效果,含平滑漸入漸出
-- ✅ **扭蛋彈跳動畫** - 機內扭蛋隨機彈跳與旋轉,模擬真實物理效果
-- ✅ **動畫序列控制** - 金幣投入 → 淡出 → 扭蛋機晃動 → 扭蛋彈跳的完整流程
-- ✅ **Zustand 狀態管理** - 輕量級全局狀態控制動畫播放
-- ✅ **加載進度系統** - 帶進度條的優雅加載畫面
-- ✅ **軌道控制器** - 自由旋轉和縮放 3D 場景
-- ✅ **HDR 環境照明** - 真實感的光影效果
-- ✅ **響應式設計** - 適配各種屏幕尺寸
+### 🎰 抽獎系統
 
-### 組件架構
-```
-src/
-├── app/
-│   ├── gacha/              # 扭蛋機頁面
-│   │   ├── page.tsx        # 頁面主組件（含加載邏輯與動畫控制）
-│   │   └── loading.css     # 加載動畫樣式
-│   ├── layout.tsx          # 根佈局
-│   ├── page.tsx            # 首頁
-│   └── globals.css         # 全局樣式
-├── components/
-│   ├── Scene.tsx           # 3D 場景主組件（含扭蛋機模型、動畫邏輯）
-│   ├── CameraAnimation.tsx # 相機動畫組件
-│   ├── FloatingText.tsx    # 3D 漂浮文字組件
-│   └── Coin.tsx            # 3D 金幣組件
-└── stores/
-    └── useAnimationStore.ts # Zustand 動畫狀態管理
-```
+#### 參與者管理
+- ✅ TXT 檔案批次上傳（格式：`姓名 員工編號 部門`）
+- ✅ 手動新增/編輯/刪除參與者
+- ✅ 參與者列表顯示（含總人數統計）
+- ✅ 支援員工編號和部門資訊（選填）
 
-## 🛠️ 開發指南
+#### 獎項管理
+- ✅ TXT 檔案批次上傳（格式：`獎品名稱 數量`）
+- ✅ 手動新增/編輯/刪除獎項
+- ✅ 獎項等級自動排序（按檔案順序）
+- ✅ 剩餘名額即時顯示
+
+#### 抽獎功能
+- ✅ 獎項選擇器（下拉選單，顯示剩餘名額）
+- ✅ 抽獎模式：
+  - **單次抽一個** - 適合逐一揭曉
+  - **抽全部剩餘** - 一次抽完該獎項所有名額
+- ✅ 智能驗證：
+  - 自動檢查是否有設定獎項
+  - 自動檢查獎項是否已抽完
+  - 自動檢查是否有足夠的參與者
+- ✅ 防重複中獎機制（自動跳過已中獎者）
+- ✅ 真實隨機演算法（Fisher-Yates Shuffle）
+
+#### 中獎紀錄
+- ✅ **本輪中獎** - 頁面右上角顯示最新一輪的中獎者
+  - 獎項名稱高亮顯示
+  - 中獎人數統計
+  - 姓名 + 員工編號清單
+- ✅ **完整歷史紀錄** - 管理後台查看所有中獎紀錄
+  - 表格式顯示（序號、姓名、員工編號、獎品名稱）
+  - CSV 匯出功能（UTF-8，支援中文）
+  - 清除紀錄功能
+
+### 🎬 3D 動畫系統
+
+#### 完整抽獎流程動畫
+1. **金幣投入** - 3D 金幣從投幣口掉落並淡出
+2. **扭蛋機晃動** - 多軸旋轉（Z/X 軸）+ Y 軸位移，平滑漸入漸出
+3. **扭蛋彈跳** - 機內扭蛋隨機彈跳與旋轉（物理模擬）
+4. **扭蛋掉落** - 單顆扭蛋從出口滾出
+5. **扭蛋浮起** - 扭蛋緩慢上浮，白光閃爍
+6. **顯示中獎者** - 彈窗顯示中獎者資訊
+
+#### 視覺效果
+- ✅ 流暢相機動畫（環繞運鏡）
+- ✅ HDR 環境照明（真實光影）
+- ✅ 金幣金屬材質（自發光效果）
+- ✅ 扭蛋多彩顏色（隨機）
+- ✅ 加載進度動畫（旋轉方塊 + 進度條）
+
+### 🔧 管理後台
+
+統一的管理介面（點擊「管理」按鈕開啟），包含四個分頁：
+
+1. **📋 參與者** - 上傳/管理參與者名單
+2. **🎁 獎項** - 上傳/管理獎項設定
+3. **⚙️ 設定** - 抽獎統計資訊
+4. **📊 紀錄** - 中獎紀錄查看與匯出
+
+### 💾 資料持久化
+
+- 使用 Zustand Persist Middleware + localStorage
+- 自動儲存：
+  - 參與者名單
+  - 獎項設定
+  - 中獎紀錄
+- 重新整理頁面資料不遺失
+
+## 🛠️ 快速開始
 
 ### 環境要求
 - Node.js 20+
 - pnpm 8+
 
-### 安裝依賴
+### 安裝與啟動
 
 ```bash
+# 1. 安裝依賴
 pnpm install
-```
 
-### 啟動開發伺服器
-
-```bash
+# 2. 啟動開發伺服器
 pnpm dev
+
+# 3. 開啟瀏覽器
+# 訪問 http://localhost:3000/gacha
 ```
-
-開啟瀏覽器訪問 [http://localhost:3000](http://localhost:3000) 查看結果。
-
-你可以通過編輯 `src/app/page.tsx` 來修改首頁，文件保存後頁面會自動更新。
 
 ### 構建生產版本
 
 ```bash
+# 構建
 pnpm build
-```
 
-### 啟動生產伺服器
-
-```bash
+# 啟動生產伺服器
 pnpm start
 ```
 
-### 程式碼檢查
+## 📖 使用指南
 
-```bash
-pnpm lint
+### 第一次使用
+
+1. **準備參與者名單** - 建立 `員工清單.txt`
+   ```
+   王小明 E001 資訊部
+   陳大華 E002 人資部
+   林美玲 E003 財務部
+   ```
+
+2. **準備獎項清單** - 建立 `獎品清單.txt`
+   ```
+   頭獎 iPad Pro 1
+   二獎 AirPods Pro 2
+   三獎 Apple Watch 3
+   參加獎 小禮物 20
+   ```
+
+3. **匯入資料**
+   - 點擊「管理」按鈕
+   - 切換到「📋 參與者」頁籤，上傳員工清單
+   - 切換到「🎁 獎項」頁籤，上傳獎品清單
+
+4. **開始抽獎**
+   - 關閉管理彈窗
+   - 選擇要抽的獎項
+   - 選擇抽獎模式（單次一個 / 全部剩餘）
+   - 點擊「開始抽獎」
+
+5. **查看結果**
+   - 右上角顯示本輪中獎者
+   - 管理後台「📊 紀錄」可查看所有中獎紀錄
+   - 點擊「匯出 CSV」下載中獎名單
+
+### 檔案格式說明
+
+#### 參與者名單 (.txt)
 ```
+姓名 員工編號 部門
+```
+- 用空格或 Tab 分隔
+- 員工編號和部門可省略
+- UTF-8 編碼
 
-## 📁 專案結構說明
+#### 獎項清單 (.txt)
+```
+獎品名稱 數量
+```
+- 最後一個欄位是數量
+- 前面所有欄位為獎品名稱（可包含空格）
+- 等級按檔案順序自動生成（第 1 行 = 等級 1）
+- UTF-8 編碼
 
-### 路由架構
-- `/` - 起始頁面
-- `/gacha` - 扭蛋機主頁面（3D 場景）
+### 範例檔案
 
-### 核心組件
+專案已包含範例檔案：
+- `/public/sample-participants.txt` - 20 位範例員工
+- `/public/sample-prizes.txt` - 8 種範例獎項
 
-#### Scene.tsx
-3D 場景的主要容器與動畫控制中心，負責：
-- Canvas 配置（相機、渲染器設置）
-- 環境光照設置（HDR 環境貼圖、補充光源）
-- GLTF 模型加載與管理
-- 軌道控制器集成
-- **扭蛋機晃動動畫** - 多軸旋轉（Z/X軸）+ Y軸位移,含平滑漸入漸出
-- **扭蛋彈跳動畫** - 自動分組識別機內扭蛋,施加隨機彈跳與旋轉
-- **金幣動畫流程** - 控制金幣下落、淡出與後續晃動序列
-- **動畫狀態管理** - 整合 Zustand store 控制播放/暫停
+## 📁 專案結構
 
-#### CameraAnimation.tsx
-相機動畫控制組件,特性：
-- 延遲啟動（3.5 秒）
-- 環繞運動（360° 旋轉）
-- 距離過渡（從遠到近）
-- 高度變化（從俯視到平視）
-- 平滑緩動函數（easeInOutQuart / easeInOutQuad）
-
-#### FloatingText.tsx
-3D 文字組件,支援：
-- 自定義文字內容
-- 可配置位置、大小、顏色
-- 上下漂浮動畫
-- 延遲啟動（等待相機動畫完成）
-
-#### Coin.tsx
-3D 金幣組件,特性：
-- 金色圓柱體幾何形狀（高品質金屬材質）
-- 正反兩面 3D $ 符號
-- 支援位置、透明度、可見性控制
-- 金屬光澤與自發光效果
-- 可整合至動畫序列中
-
-#### useAnimationStore.ts
-Zustand 狀態管理 store,提供：
-- `isAnimating` - 動畫播放狀態
-- `setIsAnimating` - 設置動畫狀態
-- `toggleAnimation` - 切換播放/暫停
+```
+kfsyscc_lottery_2026/
+├── public/
+│   ├── models/              # 3D 模型檔案
+│   ├── sample-participants.txt
+│   └── sample-prizes.txt
+├── src/
+│   ├── app/
+│   │   ├── gacha/           # 抽獎頁面
+│   │   │   ├── page.tsx     # 主頁面（含 UI 控制）
+│   │   │   └── loading.css  # 加載動畫樣式
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── Scene.tsx        # 3D 場景主組件
+│   │   ├── GachaMachine.tsx # 扭蛋機模型
+│   │   ├── GachaBall.tsx    # 扭蛋球（物理）
+│   │   ├── Coin.tsx         # 3D 金幣
+│   │   ├── CameraAnimation.tsx
+│   │   ├── FloatingText.tsx
+│   │   ├── WinnerModal.tsx  # 中獎彈窗（支援單人/多人）
+│   │   ├── WinnerRecordBoard.tsx # 本輪中獎顯示
+│   │   ├── ManagementModal.tsx   # 管理後台彈窗
+│   │   ├── ParticipantUpload.tsx # 參與者上傳
+│   │   ├── ParticipantList.tsx   # 參與者列表
+│   │   ├── PrizeUpload.tsx       # 獎項上傳
+│   │   ├── PrizeList.tsx         # 獎項列表
+│   │   ├── WinnerRecordsList.tsx # 中獎紀錄列表
+│   │   └── ui/              # Shadcn UI 組件
+│   ├── hooks/
+│   │   └── useLotteryLogic.ts # 抽獎邏輯 Hook
+│   ├── stores/
+│   │   └── useAnimationStore.ts # Zustand Store（含持久化）
+│   └── config/
+│       └── gachaConfig.ts   # 動畫配置參數
+├── next.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
 
 ## 🎨 設計特色
 
-- **沉浸式體驗** - 開場動畫引導用戶進入 3D 世界
-- **完整動畫序列** - 金幣投入 → 淡出消失 → 扭蛋機晃動 → 扭蛋彈跳的連貫流程
-- **真實物理模擬** - 扭蛋機多軸晃動配合機內扭蛋隨機彈跳,模擬真實抽獎體驗
-- **流暢動畫** - 使用緩動函數(easeInOutQuad)確保動畫自然平滑,含平滑漸入漸出
-- **真實光影** - HDR 環境照明配合定向光源,呈現真實感
-- **精緻材質** - 金幣金屬光澤、自發光效果,提升視覺質感
-- **性能優化** - React Compiler 自動優化渲染性能,支援複雜動畫流暢運行
-- **模組化設計** - 組件獨立可復用,易於維護擴展
-- **集中狀態管理** - Zustand 提供簡潔的全局狀態控制,避免 prop drilling
+### 技術亮點
+- **React Compiler** - 自動優化效能，支援複雜動畫流暢運行
+- **物理引擎整合** - 使用 @react-three/rapier 實現真實的扭蛋彈跳效果
+- **模組化設計** - 組件獨立可復用，易於維護擴展
+- **TypeScript 全覆蓋** - 完整的類型定義，降低錯誤率
+- **狀態管理最佳實踐** - Zustand + Persist，簡潔高效
 
-## 📚 相關資源
-
-- [Next.js 文檔](https://nextjs.org/docs) - Next.js 功能和 API
-- [React Three Fiber 文檔](https://docs.pmnd.rs/react-three-fiber) - R3F 使用指南
-- [Three.js 文檔](https://threejs.org/docs) - Three.js API 參考
-- [Tailwind CSS 文檔](https://tailwindcss.com/docs) - 樣式工具類參考
+### UX 設計
+- **直覺操作** - 獎項選擇、抽獎模式一目了然
+- **即時反饋** - 剩餘名額、中獎人數即時更新
+- **透明公開** - 管理介面可隨時查看，避免黑箱作業
+- **錯誤預防** - 完整的驗證機制，避免操作錯誤
+- **響應式設計** - 適配桌機、平板、手機（建議桌機使用）
 
 ## 🚢 部署
 
-推薦使用 [Vercel](https://vercel.com) 部署 Next.js 應用：
+### Vercel（推薦）
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/kfsyscc_lottery_2026)
 
-詳細部署文檔請參考 [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying)。
+### 手動部署
+
+1. 構建專案：`pnpm build`
+2. 部署 `.next` 目錄到伺服器
+3. 執行：`pnpm start`
+
+詳見 [Next.js Deployment](https://nextjs.org/docs/app/building-your-application/deploying)
+
+## 🔧 配置說明
+
+### 動畫參數調整
+
+編輯 `/src/config/gachaConfig.ts` 可調整：
+- 金幣下落速度
+- 扭蛋機晃動幅度與時間
+- 扭蛋顏色配置
+- 物理參數（彈性、摩擦力）
+
+### 時間窗口設定
+
+編輯 `/src/components/WinnerRecordBoard.tsx` 第 17 行：
+```typescript
+const timeWindow = 5000; // 5秒內視為同一輪（毫秒）
+```
+
+## 📚 API 參考
+
+### useLotteryLogic Hook
+
+```typescript
+const {
+  participants,      // 參與者列表
+  prizes,           // 獎項列表
+  winnerRecords,    // 中獎紀錄
+  statistics,       // 統計資訊
+  validateLottery,  // 驗證函數
+  drawSingleWinner, // 抽取單人
+  drawMultipleWinners, // 抽取多人
+} = useLotteryLogic();
+```
+
+### useAnimationStore
+
+```typescript
+const {
+  isAnimating,      // 動畫播放狀態
+  setIsAnimating,   // 設置動畫狀態
+  participants,     // 參與者（持久化）
+  prizes,          // 獎項（持久化）
+  winnerRecords,   // 中獎紀錄（持久化）
+  addWinnerRecord, // 新增中獎紀錄
+  // ... 更多方法
+} = useAnimationStore();
+```
+
+## 🐛 常見問題
+
+### Q: 3D 場景載入很慢？
+A: 扭蛋機模型較大（249k triangles），首次載入需要時間。建議：
+- 使用現代瀏覽器（Chrome / Edge）
+- 確保網路連線穩定
+- 等待加載進度到 100%
+
+### Q: 資料會遺失嗎？
+A: 所有資料儲存在瀏覽器的 localStorage，只要不清除瀏覽器資料就不會遺失。建議定期匯出 CSV 備份。
+
+### Q: 可以修改動畫速度嗎？
+A: 可以！編輯 `/src/config/gachaConfig.ts` 調整各項動畫參數。
+
+### Q: 支援手機嗎？
+A: 支援，但建議使用桌機以獲得最佳體驗（3D 效能、螢幕大小）。
 
 ## 📝 開發規範
 
@@ -189,15 +348,22 @@ Zustand 狀態管理 store,提供：
 - 遵循 ESLint 配置的代碼規範
 - 組件使用 `"use client"` 標記客戶端組件
 - 使用 Tailwind CSS 進行樣式設計
-- 3D 資源（模型、紋理）放置於 `public/models/` 目錄
+- 提交前執行 `pnpm lint` 檢查代碼
 
-## 🔧 配置文件
+## 🤝 貢獻
 
-- `next.config.ts` - Next.js 配置（已啟用 React Compiler）
-- `tsconfig.json` - TypeScript 配置（路徑別名 `@/*`）
-- `tailwind.config.ts` - Tailwind CSS 配置
-- `eslint.config.mjs` - ESLint 規則配置
+歡迎提交 Issue 或 Pull Request！
 
 ## 📄 授權
 
 本專案採用 MIT 授權。
+
+## 🙏 致謝
+
+- [PMNDRS](https://pmnd.rs/) - React Three Fiber 生態系統
+- [Vercel](https://vercel.com) - Next.js 框架
+- [Shadcn](https://ui.shadcn.com) - UI 組件庫
+
+---
+
+**🎰 立即開始使用，為您的活動增添科技感與趣味性！**

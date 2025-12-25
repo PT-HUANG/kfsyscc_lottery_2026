@@ -10,6 +10,7 @@ import GachaMachine, { preloadGachaMachine } from "@/components/GachaMachine";
 import GachaBall from "@/components/GachaBall";
 import WinnerModal from "@/components/WinnerModal";
 import { useAnimationStore } from "@/stores/useAnimationStore";
+import { useLotteryLogic } from "@/hooks/useLotteryLogic";
 import {
   COIN_CONFIG,
   SHAKE_CONFIG,
@@ -20,15 +21,29 @@ import {
 // ==================== 類型定義 ====================
 interface GachaSceneProps {
   onLoad?: () => void;
+  selectedPrizeId?: string;
+  drawCount?: number;
+}
+
+interface WinnerInfo {
+  name: string;
+  prize: string;
+  participantId: string;
+  employeeId?: string;
+  department?: string;
 }
 
 // ==================== 扭蛋場景組件 ====================
-function GachaScene({ onLoad }: GachaSceneProps) {
+function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps) {
   const hasCalledOnLoad = useRef(false);
 
   const isAnimating = useAnimationStore((state) => state.isAnimating);
   const setIsAnimating = useAnimationStore((state) => state.setIsAnimating);
   const addWinnerRecord = useAnimationStore((state) => state.addWinnerRecord);
+
+  // 抽獎邏輯
+  const { drawMultipleWinners, prizes } = useLotteryLogic();
+  const [currentWinners, setCurrentWinners] = useState<WinnerInfo[]>([]);
 
   const [coinVisible, setCoinVisible] = useState(false);
   const [coinPosition, setCoinPosition] = useState<[number, number, number]>(
@@ -48,7 +63,7 @@ function GachaScene({ onLoad }: GachaSceneProps) {
       id: number;
       position: [number, number, number];
       color: string;
-      ref: React.RefObject<RapierRigidBody>;
+      ref: React.RefObject<RapierRigidBody | null>;
     }>
   >([]);
   const ballIdCounter = useRef(0);
@@ -163,13 +178,17 @@ function GachaScene({ onLoad }: GachaSceneProps) {
           setTimeout(() => {
             setShowFlash(false);
             setShowModal(true);
-            // 記錄中獎信息
-            if (selectedBallId !== null) {
-              addWinnerRecord({
-                id: `#${String(selectedBallId).padStart(6, "0")}`,
-                name: "張小明",
-                prize: "頭獎 - iPhone 15 Pro",
-                color: floatingBallColor,
+            // 記錄所有中獎者信息
+            if (selectedBallId !== null && currentWinners.length > 0) {
+              currentWinners.forEach((winner) => {
+                addWinnerRecord({
+                  id: winner.participantId,
+                  name: winner.name,
+                  employeeId: winner.employeeId,
+                  department: winner.department,
+                  prize: winner.prize,
+                  color: floatingBallColor,
+                });
               });
             }
           }, 500);
@@ -204,6 +223,7 @@ function GachaScene({ onLoad }: GachaSceneProps) {
     setFloatingBallColor("");
     setFlashOpacity(0);
     floatingProgress.current = 0;
+    setCurrentWinners([]);
   };
 
   // 處理扭蛋機晃動結束
@@ -215,12 +235,44 @@ function GachaScene({ onLoad }: GachaSceneProps) {
     setCoinOpacity(1);
     setIsAnimating(false);
 
+    // 🎲 執行真實抽獎（抽取多人）
+    const lotteryResult = drawMultipleWinners(drawCount, { skipWinners: true });
+
+    if (lotteryResult.error || !lotteryResult.winners || lotteryResult.winners.length === 0) {
+      // 抽獎失敗（沒有參與者或都已中獎）
+      alert(lotteryResult.error || "抽獎失敗，請確認是否有可用的參與者名單");
+      return;
+    }
+
+    // 取得獎項（使用選擇的獎項，或第一個獎項）
+    let currentPrize = prizes.find((p) => p.id === selectedPrizeId);
+    if (!currentPrize && prizes.length > 0) {
+      currentPrize = prizes.sort((a, b) => a.level - b.level)[0];
+    }
+    const prizeName = currentPrize?.name || "參加獎";
+
+    // 儲存所有中獎者資訊
+    const winners: WinnerInfo[] = lotteryResult.winners.map((winner) => ({
+      name: winner.name,
+      prize: prizeName,
+      participantId: winner.id,
+      employeeId: winner.employeeId,
+      department: winner.department,
+    }));
+
+    setCurrentWinners(winners);
+
     // 在軌道入口處（z 軸負方向，高處）生成一顆球
     const ballId = ballIdCounter.current++;
     const ballColor =
       GACHA_COLORS[Math.floor(Math.random() * GACHA_COLORS.length)];
     const ballRef = createRef<RapierRigidBody>();
-    const newBall = {
+    const newBall: {
+      id: number;
+      position: [number, number, number];
+      color: string;
+      ref: React.RefObject<RapierRigidBody | null>;
+    } = {
       id: ballId,
       position: [1.5, -3, 0] as [number, number, number], // 略高於軌道，讓它自然落下
       color: ballColor,
@@ -314,16 +366,12 @@ function GachaScene({ onLoad }: GachaSceneProps) {
       )}
 
       {/* 中獎人彈窗（使用HTML覆蓋層）*/}
-      {showModal && (
+      {showModal && currentWinners.length > 0 && (
         <Html fullscreen>
           <WinnerModal
             isOpen={showModal}
             onClose={handleCloseModal}
-            winnerInfo={{
-              name: "張小明",
-              prize: "頭獎 - iPhone 15 Pro",
-              id: `#${String(selectedBallId).padStart(6, "0")}`,
-            }}
+            winners={currentWinners}
           />
         </Html>
       )}
@@ -337,8 +385,12 @@ preloadGachaMachine();
 // ==================== 場景組件 ====================
 export default function Scene({
   onReadyAction,
+  selectedPrizeId,
+  drawCount,
 }: {
   onReadyAction?: () => void;
+  selectedPrizeId?: string;
+  drawCount?: number;
 }) {
   return (
     <div
@@ -368,7 +420,11 @@ export default function Scene({
         />
         <pointLight position={[-3, 2, -2]} intensity={0.5} color="#ffd6a5" />
         <Physics gravity={[0, -9.81, 0]}>
-          <GachaScene onLoad={onReadyAction} />
+          <GachaScene
+            onLoad={onReadyAction}
+            selectedPrizeId={selectedPrizeId}
+            drawCount={drawCount}
+          />
         </Physics>
         <OrbitControls
           enableDamping
