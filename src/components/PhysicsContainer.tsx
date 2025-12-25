@@ -4,6 +4,7 @@ import { CuboidCollider } from "@react-three/rapier";
 interface PhysicsBoundsProps {
   size?: [number, number, number];
   wallThickness?: number;
+  position?: [number, number, number];
 }
 
 // 默认值
@@ -61,6 +62,69 @@ export function PhysicsBounds({
         position={[w / 2, 0, 0]}
         friction={2.0}
         restitution={0.3}
+      />
+    </>
+  );
+}
+
+// 溜滑梯默認值
+const DEFAULT_TRACK_SIZE: [number, number, number] = [0.5, 0.3, 3.75]; // 寬度、護欄高度、長度
+const DEFAULT_TRACK_THICKNESS = 0.05;
+const DEFAULT_TRACK_POSITION: [number, number, number] = [1.5, -4.5, 0];
+const DEFAULT_TRACK_ANGLE = -0.1; // 傾斜角度（弧度）
+
+interface GachaTrackProps extends PhysicsBoundsProps {
+  angle?: number; // 傾斜角度
+}
+
+export function GachaTrack({
+  size = DEFAULT_TRACK_SIZE,
+  wallThickness = DEFAULT_TRACK_THICKNESS,
+  position = DEFAULT_TRACK_POSITION,
+  angle = DEFAULT_TRACK_ANGLE,
+}: GachaTrackProps) {
+  const [w, railHeight, trackLength] = size; // 寬度、護欄高度、軌道長度
+  const [px, py, pz] = position;
+
+  // 計算傾斜後的高度差
+  const heightDiff = Math.sin(angle) * trackLength;
+  const trackMidY = py - heightDiff / 2; // 軌道中心點的 Y 座標
+
+  return (
+    <>
+      {/* 傾斜的滑道底部（從 z 負往 z 正傾斜）*/}
+      <CuboidCollider
+        args={[w / 2, wallThickness / 2, trackLength / 2]}
+        position={[px, trackMidY, pz]}
+        rotation={[-angle, 0, 0]} // 繞 X 軸旋轉，讓它從高到低
+        friction={0.3} // 低摩擦力，讓球更容易滑動
+        restitution={0.2}
+      />
+
+      {/* 左側護欄（跟隨傾斜角度）*/}
+      <CuboidCollider
+        args={[wallThickness / 2, railHeight / 2, trackLength / 2]}
+        position={[px - w / 2, trackMidY + railHeight / 2, pz]}
+        rotation={[-angle, 0, 0]}
+        friction={0.5}
+        restitution={0.2}
+      />
+
+      {/* 右側護欄（跟隨傾斜角度）*/}
+      <CuboidCollider
+        args={[wallThickness / 2, railHeight / 2, trackLength / 2]}
+        position={[px + w / 2, trackMidY + railHeight / 2, pz]}
+        rotation={[-angle, 0, 0]}
+        friction={0.5}
+        restitution={0.2}
+      />
+
+      {/* 出口擋板（z 軸正方向，低處）*/}
+      <CuboidCollider
+        args={[w / 2 - wallThickness , (railHeight + wallThickness) / 2, wallThickness / 2]}
+        position={[px, py + (railHeight + wallThickness) / 2, pz + trackLength / 2]}
+        friction={0.5}
+        restitution={0.2}
       />
     </>
   );
