@@ -68,10 +68,10 @@ export function PhysicsBounds({
 }
 
 // 溜滑梯默認值
-const DEFAULT_TRACK_SIZE: [number, number, number] = [0.5, 0.3, 3.75]; // 寬度、護欄高度、長度
+const DEFAULT_TRACK_SIZE: [number, number, number] = [0.9, 0.65, 4.2]; // 寬度、護欄高度、長度（再次增寬以容納更大的球）
 const DEFAULT_TRACK_THICKNESS = 0.05;
-const DEFAULT_TRACK_POSITION: [number, number, number] = [1.5, -4.5, 0];
-const DEFAULT_TRACK_ANGLE = -0.1; // 傾斜角度（弧度）
+const DEFAULT_TRACK_POSITION: [number, number, number] = [1.5, -4.75, 0];
+const DEFAULT_TRACK_ANGLE = -0.4; // 傾斜角度（弧度）
 
 interface GachaTrackProps extends PhysicsBoundsProps {
   angle?: number; // 傾斜角度

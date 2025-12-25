@@ -33,7 +33,7 @@ export const GACHA_MACHINE_CONFIG = {
  * 金幣動畫配置
  */
 export const COIN_CONFIG = {
-  START_POSITION: new THREE.Vector3(-0.125, -1, 1.75),
+  START_POSITION: new THREE.Vector3(-0.125, -2, 1.75),
   TARGET_POSITION: new THREE.Vector3(-0.125, -3.5, 1.75),
   DISAPPEAR_Y: -2.75,
   FALL_SPEED: 1.5,
@@ -59,7 +59,7 @@ export const SHAKE_CONFIG = {
  * 扭蛋球物理屬性配置
  */
 export const GACHA_BALL_PHYSICS = {
-  radius: 0.25,
+  radius: 0.4225, // 再增加 30% (原: 0.325)
   segments: 16,
   restitution: 0.5,
   friction: 1.0,
@@ -67,6 +67,6 @@ export const GACHA_BALL_PHYSICS = {
   gravityScale: 1,
   linearDamping: 0.2,
   angularDamping: 0.2,
-  minDistance: 0.625, // radius * 2.5
-  margin: 0.3, // radius * 1.2
+  minDistance: 1.05625, // radius * 2.5
+  margin: 0.507, // radius * 1.2
 } as const;

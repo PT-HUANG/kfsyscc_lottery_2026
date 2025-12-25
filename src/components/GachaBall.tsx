@@ -1,6 +1,7 @@
 "use client";
 
-import { RigidBody } from "@react-three/rapier";
+import { forwardRef } from "react";
+import { RigidBody, RapierRigidBody } from "@react-three/rapier";
 import { GACHA_COLORS, GACHA_BALL_PHYSICS } from "@/config/gachaConfig";
 
 /**
@@ -80,25 +81,29 @@ export interface GachaBallProps {
  * />
  * ```
  */
-export default function GachaBall({
-  position,
-  color,
-  index = 0,
-  radius = GACHA_BALL_PHYSICS.radius,
-  restitution = GACHA_BALL_PHYSICS.restitution,
-  friction = GACHA_BALL_PHYSICS.friction,
-  mass = GACHA_BALL_PHYSICS.mass,
-  gravityScale = GACHA_BALL_PHYSICS.gravityScale,
-  linearDamping = GACHA_BALL_PHYSICS.linearDamping,
-  angularDamping = GACHA_BALL_PHYSICS.angularDamping,
-  metalness = 0.1,
-  roughness = 0.1,
-}: GachaBallProps) {
+const GachaBall = forwardRef<RapierRigidBody, GachaBallProps>(function GachaBall(
+  {
+    position,
+    color,
+    index = 0,
+    radius = GACHA_BALL_PHYSICS.radius,
+    restitution = GACHA_BALL_PHYSICS.restitution,
+    friction = GACHA_BALL_PHYSICS.friction,
+    mass = GACHA_BALL_PHYSICS.mass,
+    gravityScale = GACHA_BALL_PHYSICS.gravityScale,
+    linearDamping = GACHA_BALL_PHYSICS.linearDamping,
+    angularDamping = GACHA_BALL_PHYSICS.angularDamping,
+    metalness = 0.1,
+    roughness = 0.1,
+  },
+  ref
+) {
   // 如果沒有提供顏色，從預設顏色列表中選擇
   const ballColor = color ?? GACHA_COLORS[index % GACHA_COLORS.length];
 
   return (
     <RigidBody
+      ref={ref}
       position={position}
       restitution={restitution}
       friction={friction}
@@ -119,7 +124,9 @@ export default function GachaBall({
       </mesh>
     </RigidBody>
   );
-}
+});
+
+export default GachaBall;
 
 /**
  * 多個扭蛋球的容器元件

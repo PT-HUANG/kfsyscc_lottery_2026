@@ -128,7 +128,7 @@ export default function GachaMachine({
   isShaking = false,
   shakeConfig = {},
   showBalls = true,
-  ballCount = 10,
+  ballCount = 20,
   ballColors,
   shakeStartTime: externalShakeStartTime,
   onShakeEnd,
@@ -213,7 +213,7 @@ export default function GachaMachine({
       return fallbackPos.add(modelPos);
     };
 
-    // 找到模型中的扭蛋球 mesh 或根據 ballCount 生成
+    // 找到模型中的扭蛋球 mesh，但只取 ballCount 數量
     let meshCount = 0;
     scene.traverse((child) => {
       if (
@@ -222,10 +222,14 @@ export default function GachaMachine({
           child.name.includes("Gacha_machine_glass-material"))
       ) {
         const mesh = child as THREE.Mesh;
-        const randomPos = generateNonOverlappingPosition();
-        capsules.push({ position: randomPos, mesh });
-        mesh.visible = false;
-        meshCount++;
+        mesh.visible = false; // 先隱藏所有模型中的扭蛋球
+
+        // 只添加前 ballCount 數量到物理球陣列
+        if (meshCount < ballCount) {
+          const randomPos = generateNonOverlappingPosition();
+          capsules.push({ position: randomPos, mesh });
+          meshCount++;
+        }
       }
     });
 

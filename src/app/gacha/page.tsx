@@ -4,6 +4,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import type { Mesh } from "three";
 import Scene from "@/components/Scene";
 import { Button } from "@/components/ui/button";
+import WinnerRecordBoard from "@/components/WinnerRecordBoard";
 import { useAnimationStore } from "@/stores/useAnimationStore";
 import "./loading.css";
 
@@ -114,28 +115,21 @@ export default function GachaPage() {
         <Scene onReadyAction={handleSceneReady} />
       </div>
 
-      {/* 控制按钮 */}
+      {/* 控制按钮和計分版 */}
       {!loading && (
-        <div
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            zIndex: 100,
-          }}
-        >
+        <div className="fixed top-5 right-5 z-[100] flex flex-col items-start gap-4">
+          {/* 抽獎按鈕 */}
           <Button
             onClick={toggleAnimation}
             size="lg"
-            variant={isAnimating ? "default" : "outline"}
-            style={{
-              minWidth: "120px",
-              fontSize: "16px",
-              fontWeight: "600",
-            }}
+            disabled={isAnimating}
+            className="min-w-[120px] max-w-10 text-xl font-semibold py-6 bg-gradient-to-br from-pink-400 via-pink-500 to-rose-500 hover:from-pink-500 hover:via-pink-600 hover:to-rose-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isAnimating ? "⏸ 暫停" : "▶ 播放"}
+            抽獎
           </Button>
+
+          {/* 計分版 */}
+          <WinnerRecordBoard />
         </div>
       )}
 

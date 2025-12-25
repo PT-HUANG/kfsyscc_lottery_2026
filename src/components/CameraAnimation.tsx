@@ -8,7 +8,7 @@ export default function CameraAnimation() {
   const elapsedTime = useRef(0); // 累积时间
   const delayTime = 3.5; // 开始前停留1.5秒
   const initialRadius = 20; // 初始半径（远）
-  const targetRadius = 10; // 目标半径（近）
+  const targetRadius = 12; // 目标半径（近）
   const initialAngle = 0; // 初始角度
   const targetAngle = Math.PI * 2; // 目标角度（360度 = 2π）
   const initialHeight = 6; // 初始高度（俯视）
