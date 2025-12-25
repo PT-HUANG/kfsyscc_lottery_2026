@@ -172,7 +172,8 @@ export default function GachaPage() {
         setSelectedPrizeId(firstAvailable.id);
       }
     }
-  }, [prizes, selectedPrizeId, getPrizeRemainingSlots]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prizes, selectedPrizeId, winnerRecords]);
 
   return (
     <>
