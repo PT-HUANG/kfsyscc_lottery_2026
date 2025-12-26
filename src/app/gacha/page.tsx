@@ -107,6 +107,14 @@ export default function GachaPage() {
     scale: 150,
   });
 
+  // 圖片刷新 key（當圖片上傳時遞增此值以觸發重新加載）
+  const [imageRefreshKey, setImageRefreshKey] = useState(0);
+
+  // 處理圖片上傳完成
+  const handleImageUpload = useCallback(() => {
+    setImageRefreshKey((prev) => prev + 1);
+  }, []);
+
   // 使用 Zustand store
   const { isAnimating, setIsAnimating } = useAnimationStore();
   const showWinnerModal = useAnimationStore((state) => state.showWinnerModal);
@@ -292,6 +300,7 @@ export default function GachaPage() {
           }
           selectedGroup={selectedGroup}
           backgroundConfig={bgConfig}
+          imageRefreshKey={imageRefreshKey}
         />
       </div>
 
@@ -459,6 +468,7 @@ export default function GachaPage() {
           config={bgConfig}
           onChange={setBgConfig}
           onClose={() => setShowBgPanel(false)}
+          onImageUpload={handleImageUpload}
         />
       )}
 

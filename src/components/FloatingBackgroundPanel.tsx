@@ -1,5 +1,11 @@
 "use client";
 
+import { useRef, useState } from "react";
+import {
+  saveBackgroundImage,
+  deleteBackgroundImage,
+} from "@/utils/imageStorage";
+
 export interface BackgroundConfig {
   positionX: number;
   positionY: number;
@@ -11,15 +17,68 @@ interface FloatingBackgroundPanelProps {
   config: BackgroundConfig;
   onChange: (config: BackgroundConfig) => void;
   onClose: () => void;
+  onImageUpload?: () => void; // 上傳圖片后的回调
 }
 
 export default function FloatingBackgroundPanel({
   config,
   onChange,
   onClose,
+  onImageUpload,
 }: FloatingBackgroundPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const handleChange = (key: keyof BackgroundConfig, value: number) => {
     onChange({ ...config, [key]: value });
+  };
+
+  // 处理文件上傳
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      await saveBackgroundImage(file);
+      alert("背景圖片上傳成功！");
+      // 通知父组件刷新圖片
+      if (onImageUpload) {
+        onImageUpload();
+      }
+    } catch (error) {
+      alert(
+        `上傳失敗：${error instanceof Error ? error.message : "未知錯誤"}`
+      );
+    } finally {
+      setUploading(false);
+      // 清空 input 以允许重复上傳同一文件
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // 删除自定义背景
+  const handleDeleteImage = async () => {
+    if (!confirm("確定要刪除您上傳的圖片，恢復預設背景嗎？")) {
+      return;
+    }
+
+    try {
+      await deleteBackgroundImage();
+      alert("恢復預設背景圖片");
+      // 通知父组件刷新圖片
+      if (onImageUpload) {
+        onImageUpload();
+      }
+    } catch (error) {
+      alert(
+        `刪除失敗：${error instanceof Error ? error.message : "未知錯誤"}`
+      );
+    }
   };
 
   return (
@@ -87,6 +146,84 @@ export default function FloatingBackgroundPanel({
 
       {/* 控制面板 */}
       <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 圖片上傳区域 */}
+          <div style={{ marginBottom: "8px" }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
+            />
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  background: uploading ? "#9ca3af" : "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: uploading ? "not-allowed" : "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!uploading) e.currentTarget.style.background = "#2563eb";
+                }}
+                onMouseLeave={(e) => {
+                  if (!uploading) e.currentTarget.style.background = "#3b82f6";
+                }}
+              >
+                {uploading ? "上傳中..." : "上傳圖片"}
+              </button>
+
+              <button
+                onClick={handleDeleteImage}
+                disabled={uploading}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  background: uploading ? "#9ca3af" : "#ef4444",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: uploading ? "not-allowed" : "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!uploading) e.currentTarget.style.background = "#dc2626";
+                }}
+                onMouseLeave={(e) => {
+                  if (!uploading) e.currentTarget.style.background = "#ef4444";
+                }}
+              >
+                恢復預設
+              </button>
+            </div>
+
+            <p style={{
+              fontSize: "11px",
+              color: "#6b7280",
+              marginTop: "6px",
+              lineHeight: "1.4"
+            }}>
+              支持 PNG、JPG、WebP 格式，最大 10MB
+            </p>
+          </div>
+
+          <div style={{
+            borderTop: "1px solid #e5e7eb",
+            paddingTop: "12px",
+            marginTop: "4px"
+          }} />
+
           {/* Position X */}
           <div>
             <label

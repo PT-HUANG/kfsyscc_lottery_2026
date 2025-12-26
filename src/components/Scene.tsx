@@ -27,12 +27,47 @@ import {
 
 // ==================== 背景平面組件 ====================
 
+import {
+  getBackgroundImage,
+  blobToDataURL,
+} from "@/utils/imageStorage";
+
 interface BackgroundPlaneProps {
   config: BackgroundConfig;
+  imageRefreshKey?: number; // 用于触发图片重新加载
 }
 
-function BackgroundPlane({ config }: BackgroundPlaneProps) {
-  const originalTexture = useTexture("/GachaBG.png");
+function BackgroundPlane({ config, imageRefreshKey }: BackgroundPlaneProps) {
+  const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number>(1.5); // 默认 1.5:1
+
+  // 加载自定义背景图片
+  useEffect(() => {
+    async function loadCustomImage() {
+      try {
+        const storedImage = await getBackgroundImage();
+        if (storedImage) {
+          const dataUrl = await blobToDataURL(storedImage.blob);
+          setCustomImageUrl(dataUrl);
+          setImageAspectRatio(storedImage.aspectRatio);
+        } else {
+          // 没有自定义图片，使用默认图片
+          setCustomImageUrl(null);
+          setImageAspectRatio(1.5); // 默认图片的比例
+        }
+      } catch (error) {
+        console.error("加載自定義背景圖片失敗：", error);
+        setCustomImageUrl(null);
+        setImageAspectRatio(1.5);
+      }
+    }
+
+    loadCustomImage();
+  }, [imageRefreshKey]); // 当 imageRefreshKey 变化时重新加载
+
+  // 使用自定义图片或默认图片
+  const imageUrl = customImageUrl || "/GachaBG.png";
+  const originalTexture = useTexture(imageUrl);
 
   // 設定正確的色彩空間以保持原始顏色（克隆以避免修改原始 texture）
   const texture = useMemo(() => {
@@ -42,12 +77,16 @@ function BackgroundPlane({ config }: BackgroundPlaneProps) {
     return clonedTexture;
   }, [originalTexture]);
 
+  // 根据图片比例计算平面尺寸（保持图片不变形）
+  const planeWidth = config.scale * imageAspectRatio;
+  const planeHeight = config.scale;
+
   return (
     <mesh
       position={[config.positionX, config.positionY, config.positionZ]}
       renderOrder={-1}
     >
-      <planeGeometry args={[config.scale * 1.5, config.scale]} />
+      <planeGeometry args={[planeWidth, planeHeight]} />
       <meshBasicMaterial
         map={texture}
         toneMapped={false} // 停用色調映射以保持原始顏色
@@ -451,12 +490,14 @@ export default function Scene({
   drawCount,
   selectedGroup,
   backgroundConfig,
+  imageRefreshKey,
 }: {
   onReadyAction?: () => void;
   selectedPrizeId?: string;
   drawCount?: number;
   selectedGroup?: string;
   backgroundConfig: BackgroundConfig;
+  imageRefreshKey?: number; // 用于触发背景图片重新加载
 }) {
   return (
     <div
@@ -476,7 +517,7 @@ export default function Scene({
         gl={{ toneMappingExposure: 1.2 }}
       >
         {/* 背景平面 - 固定在 3D 場景中 */}
-        <BackgroundPlane config={backgroundConfig} />
+        <BackgroundPlane config={backgroundConfig} imageRefreshKey={imageRefreshKey} />
 
         <CameraAnimation />
         <Environment preset="sunset" environmentIntensity={1.5} />
