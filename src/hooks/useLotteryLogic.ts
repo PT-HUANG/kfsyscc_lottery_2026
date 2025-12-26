@@ -4,6 +4,7 @@ import { useAnimationStore, type Participant } from "@/stores/useAnimationStore"
 export interface LotteryOptions {
   skipWinners?: boolean; // 是否跳過已中獎者
   prizeId?: string; // 獎項 ID
+  selectedGroup?: string; // 選擇的分組（如果有，則只有該分組的參與者可以抽獎）
 }
 
 export interface LotteryResult {
@@ -41,6 +42,13 @@ export function useLotteryLogic() {
         );
       }
 
+      // 如果選擇了特定分組，只保留該分組的參與者
+      if (options.selectedGroup) {
+        available = available.filter(
+          (p) => p.group === options.selectedGroup
+        );
+      }
+
       return available;
     },
     [participants, winnerParticipantIds]
@@ -67,10 +75,13 @@ export function useLotteryLogic() {
       }
 
       if (availableCount === 0) {
+        const errorMsg = options.selectedGroup
+          ? `分組「${options.selectedGroup}」的參與者都已中獎或沒有此分組的參與者`
+          : "所有參與者都已中獎，無可用名單";
         return {
           valid: false,
           availableCount: 0,
-          error: "所有參與者都已中獎，無可用名單",
+          error: errorMsg,
         };
       }
 
@@ -171,10 +182,18 @@ export function useLotteryLogic() {
         };
       }
 
-      const result = drawMultipleWinners(prize.quantity, {
-        ...options,
-        prizeId,
-      });
+      // 如果獎品有設定限定分組，自動設定 selectedGroup
+      const finalOptions = { ...options, prizeId };
+      if (prize.allowedGroup) {
+        finalOptions.selectedGroup = prize.allowedGroup;
+      }
+
+      const result = drawMultipleWinners(prize.quantity, finalOptions);
+
+      // 如果因為分組限制導致參與者不足，提供更詳細的錯誤訊息
+      if (result.error && prize.allowedGroup) {
+        result.error = `此獎項限定「${prize.allowedGroup}」分組。${result.error}`;
+      }
 
       return {
         ...result,

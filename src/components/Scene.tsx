@@ -1,8 +1,14 @@
 "use client";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Environment, Html } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import {
+  OrbitControls,
+  Environment,
+  Html,
+  useTexture,
+} from "@react-three/drei";
 import { Physics, RapierRigidBody } from "@react-three/rapier";
-import { useRef, useEffect, useState, createRef } from "react";
+import { useRef, useEffect, useState, createRef, useMemo } from "react";
+import * as THREE from "three";
 import FloatingText from "@/components/FloatingText";
 import CameraAnimation from "@/components/CameraAnimation";
 import Coin from "@/components/Coin";
@@ -11,6 +17,7 @@ import GachaBall from "@/components/GachaBall";
 import WinnerModal from "@/components/WinnerModal";
 import { useAnimationStore } from "@/stores/useAnimationStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
+import { type BackgroundConfig } from "@/components/BackgroundSettings";
 import {
   COIN_CONFIG,
   SHAKE_CONFIG,
@@ -18,11 +25,44 @@ import {
   GACHA_BALL_PHYSICS,
 } from "@/config/gachaConfig";
 
+// ==================== 背景平面組件 ====================
+
+interface BackgroundPlaneProps {
+  config: BackgroundConfig;
+}
+
+function BackgroundPlane({ config }: BackgroundPlaneProps) {
+  const originalTexture = useTexture("/GachaBG.png");
+
+  // 設定正確的色彩空間以保持原始顏色（克隆以避免修改原始 texture）
+  const texture = useMemo(() => {
+    const clonedTexture = originalTexture.clone();
+    clonedTexture.colorSpace = THREE.SRGBColorSpace;
+    clonedTexture.needsUpdate = true;
+    return clonedTexture;
+  }, [originalTexture]);
+
+  return (
+    <mesh
+      position={[config.positionX, config.positionY, config.positionZ]}
+      renderOrder={-1}
+    >
+      <planeGeometry args={[config.scale, config.scale]} />
+      <meshBasicMaterial
+        map={texture}
+        toneMapped={false} // 停用色調映射以保持原始顏色
+        transparent={false}
+      />
+    </mesh>
+  );
+}
+
 // ==================== 類型定義 ====================
 interface GachaSceneProps {
   onLoad?: () => void;
   selectedPrizeId?: string;
   drawCount?: number;
+  selectedGroup?: string; // 選擇的分組
 }
 
 interface WinnerInfo {
@@ -31,15 +71,23 @@ interface WinnerInfo {
   participantId: string;
   employeeId?: string;
   department?: string;
+  group: string; // 分組（必填）
 }
 
 // ==================== 扭蛋場景組件 ====================
-function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps) {
+function GachaScene({
+  onLoad,
+  selectedPrizeId,
+  drawCount = 1,
+  selectedGroup,
+}: GachaSceneProps) {
   const hasCalledOnLoad = useRef(false);
 
   const isAnimating = useAnimationStore((state) => state.isAnimating);
   const setIsAnimating = useAnimationStore((state) => state.setIsAnimating);
   const addWinnerRecord = useAnimationStore((state) => state.addWinnerRecord);
+  const showWinnerModal = useAnimationStore((state) => state.showWinnerModal);
+  const setShowWinnerModal = useAnimationStore((state) => state.setShowWinnerModal);
 
   // 抽獎邏輯
   const { drawMultipleWinners, prizes } = useLotteryLogic();
@@ -77,7 +125,6 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
   const floatingStartPosition = useRef<[number, number, number]>([0, 0, 0]);
   const [showFlash, setShowFlash] = useState(false);
   const [flashOpacity, setFlashOpacity] = useState(0);
-  const [showModal, setShowModal] = useState(false);
   const floatingProgress = useRef(0);
 
   const shouldStartAnimation = useRef(false);
@@ -177,7 +224,8 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
           setShowFlash(true);
           setTimeout(() => {
             setShowFlash(false);
-            setShowModal(true);
+            setShowWinnerModal(true);
+            setIsAnimating(false); // 結束動畫狀態，讓UI在關閉彈窗後可以顯示
             // 記錄所有中獎者信息
             if (selectedBallId !== null && currentWinners.length > 0) {
               currentWinners.forEach((winner) => {
@@ -186,6 +234,7 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
                   name: winner.name,
                   employeeId: winner.employeeId,
                   department: winner.department,
+                  group: winner.group,
                   prize: winner.prize,
                   color: floatingBallColor,
                 });
@@ -218,7 +267,7 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
 
   // 處理關閉彈窗
   const handleCloseModal = () => {
-    setShowModal(false);
+    setShowWinnerModal(false);
     setSelectedBallId(null);
     setFloatingBallColor("");
     setFlashOpacity(0);
@@ -233,22 +282,34 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
     coinAnimating.current = false;
     isFading.current = false;
     setCoinOpacity(1);
-    setIsAnimating(false);
+    // 注意：不在這裡設定 setIsAnimating(false)，而是在顯示彈窗時才設定
 
-    // 🎲 執行真實抽獎（抽取多人）
-    const lotteryResult = drawMultipleWinners(drawCount, { skipWinners: true });
+    // 取得選擇的獎項
+    let currentPrize = prizes.find((p) => p.id === selectedPrizeId);
+    if (!currentPrize && prizes.length > 0) {
+      currentPrize = prizes.sort((a, b) => a.level - b.level)[0];
+    }
 
-    if (lotteryResult.error || !lotteryResult.winners || lotteryResult.winners.length === 0) {
+    // 🎯 關鍵修正：如果獎項有設定 allowedGroup，強制使用獎項的分組限制
+    const effectiveGroup = currentPrize?.allowedGroup || selectedGroup;
+
+    // 🎲 執行真實抽獎（抽取多人，考慮分組篩選）
+    const lotteryResult = drawMultipleWinners(drawCount, {
+      skipWinners: true,
+      selectedGroup: effectiveGroup,
+    });
+
+    if (
+      lotteryResult.error ||
+      !lotteryResult.winners ||
+      lotteryResult.winners.length === 0
+    ) {
       // 抽獎失敗（沒有參與者或都已中獎）
       alert(lotteryResult.error || "抽獎失敗，請確認是否有可用的參與者名單");
       return;
     }
 
-    // 取得獎項（使用選擇的獎項，或第一個獎項）
-    let currentPrize = prizes.find((p) => p.id === selectedPrizeId);
-    if (!currentPrize && prizes.length > 0) {
-      currentPrize = prizes.sort((a, b) => a.level - b.level)[0];
-    }
+    // 獎項名稱（已在上面獲取）
     const prizeName = currentPrize?.name || "參加獎";
 
     // 儲存所有中獎者資訊
@@ -258,6 +319,7 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
       participantId: winner.id,
       employeeId: winner.employeeId,
       department: winner.department,
+      group: winner.group,
     }));
 
     setCurrentWinners(winners);
@@ -366,10 +428,10 @@ function GachaScene({ onLoad, selectedPrizeId, drawCount = 1 }: GachaSceneProps)
       )}
 
       {/* 中獎人彈窗（使用HTML覆蓋層）*/}
-      {showModal && currentWinners.length > 0 && (
+      {showWinnerModal && currentWinners.length > 0 && (
         <Html fullscreen>
           <WinnerModal
-            isOpen={showModal}
+            isOpen={showWinnerModal}
             onClose={handleCloseModal}
             winners={currentWinners}
           />
@@ -387,10 +449,14 @@ export default function Scene({
   onReadyAction,
   selectedPrizeId,
   drawCount,
+  selectedGroup,
+  backgroundConfig,
 }: {
   onReadyAction?: () => void;
   selectedPrizeId?: string;
   drawCount?: number;
+  selectedGroup?: string;
+  backgroundConfig: BackgroundConfig;
 }) {
   return (
     <div
@@ -409,7 +475,9 @@ export default function Scene({
         camera={{ fov: 65, near: 0.01, far: 1000, position: [0, 3, 20] }}
         gl={{ toneMappingExposure: 1.2 }}
       >
-        <color attach="background" args={["#e8f4f8"]} />
+        {/* 背景平面 - 固定在 3D 場景中 */}
+        <BackgroundPlane config={backgroundConfig} />
+
         <CameraAnimation />
         <Environment preset="sunset" environmentIntensity={1.5} />
         <ambientLight intensity={0.3} />
@@ -424,6 +492,7 @@ export default function Scene({
             onLoad={onReadyAction}
             selectedPrizeId={selectedPrizeId}
             drawCount={drawCount}
+            selectedGroup={selectedGroup}
           />
         </Physics>
         <OrbitControls

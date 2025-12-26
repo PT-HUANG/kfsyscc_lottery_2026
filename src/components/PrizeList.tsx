@@ -9,9 +9,15 @@ export default function PrizeList() {
   const updatePrize = useAnimationStore((state) => state.updatePrize);
   const removePrize = useAnimationStore((state) => state.removePrize);
   const clearPrizes = useAnimationStore((state) => state.clearPrizes);
+  const participants = useAnimationStore((state) => state.participants);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // 獲取所有可用的分組（去重，group 現在是必填）
+  const availableGroups = Array.from(
+    new Set(participants.map((p) => p.group))
+  ).sort();
 
   // 表單狀態
   const [formData, setFormData] = useState({
@@ -19,6 +25,7 @@ export default function PrizeList() {
     level: 1,
     quantity: 1,
     description: "",
+    allowedGroup: "",
   });
 
   const resetForm = () => {
@@ -27,6 +34,7 @@ export default function PrizeList() {
       level: 1,
       quantity: 1,
       description: "",
+      allowedGroup: "",
     });
     setEditingId(null);
     setShowAddForm(false);
@@ -50,6 +58,7 @@ export default function PrizeList() {
         level: formData.level,
         quantity: formData.quantity,
         description: formData.description.trim() || undefined,
+        allowedGroup: formData.allowedGroup.trim() || undefined,
       });
     } else {
       // 新增獎項
@@ -59,6 +68,7 @@ export default function PrizeList() {
         level: formData.level,
         quantity: formData.quantity,
         description: formData.description.trim() || undefined,
+        allowedGroup: formData.allowedGroup.trim() || undefined,
       });
     }
 
@@ -71,6 +81,7 @@ export default function PrizeList() {
       level: prize.level,
       quantity: prize.quantity,
       description: prize.description || "",
+      allowedGroup: prize.allowedGroup || "",
     });
     setEditingId(prize.id);
     setShowAddForm(true);
@@ -84,6 +95,18 @@ export default function PrizeList() {
     }
   };
 
+  // 處理新增獎項按鈕點擊
+  const handleAddPrizeClick = () => {
+    // 檢查是否有參與者清單
+    if (participants.length === 0) {
+      alert("請先上傳參與者名單！\n\n必須先有參與者清單才能新增獎項。");
+      return;
+    }
+
+    resetForm();
+    setShowAddForm(!showAddForm);
+  };
+
   // 計算總中獎人數
   const totalWinners = prizes.reduce((sum, prize) => sum + prize.quantity, 0);
 
@@ -92,6 +115,21 @@ export default function PrizeList() {
 
   return (
     <div className="w-full space-y-4">
+      {/* 提示訊息：需要先上傳參與者 */}
+      {participants.length === 0 && (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-start space-x-2">
+            <span className="text-yellow-600 text-lg">⚠️</span>
+            <div>
+              <div className="font-medium text-yellow-800">提示</div>
+              <div className="text-sm text-yellow-700">
+                請先到「參與者」分頁上傳參與者名單，才能新增或上傳獎項。
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 標題與統計 */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800">
@@ -102,11 +140,13 @@ export default function PrizeList() {
         </h3>
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              resetForm();
-              setShowAddForm(!showAddForm);
-            }}
-            className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            onClick={handleAddPrizeClick}
+            className={`px-3 py-1.5 text-sm rounded transition-colors ${
+              participants.length === 0
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+            title={participants.length === 0 ? "請先上傳參與者名單" : "新增獎項"}
           >
             {showAddForm ? "取消" : "+ 新增獎項"}
           </button>
@@ -178,6 +218,41 @@ export default function PrizeList() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              限定分組
+            </label>
+            {availableGroups.length > 0 ? (
+              <select
+                value={formData.allowedGroup}
+                onChange={(e) =>
+                  setFormData({ ...formData, allowedGroup: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">不限定（所有分組可抽）</option>
+                {availableGroups.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={formData.allowedGroup}
+                onChange={(e) =>
+                  setFormData({ ...formData, allowedGroup: e.target.value })
+                }
+                placeholder="選填，例如：VIP組（需先上傳分組參與者）"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )}
+            <div className="text-xs text-gray-500 mt-1">
+              選填，限定只有特定分組的參與者可以抽此獎項
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               獎項描述
             </label>
             <textarea
@@ -228,6 +303,11 @@ export default function PrizeList() {
                     <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
                       等級 {prize.level}
                     </span>
+                    {prize.allowedGroup && (
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                        🎯 限定：{prize.allowedGroup}
+                      </span>
+                    )}
                     <h4 className="font-semibold text-gray-800">
                       {prize.name}
                     </h4>

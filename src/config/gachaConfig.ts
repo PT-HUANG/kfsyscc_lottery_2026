@@ -45,7 +45,7 @@ export const COIN_CONFIG = {
  * 扭蛋機晃動動畫配置
  */
 export const SHAKE_CONFIG = {
-  DURATION: 5,
+  DURATION: 3,
   ROTATION_Z_AMPLITUDE: 0.08, // 增加 Z 軸旋轉幅度 (原: 0.045)
   ROTATION_X_AMPLITUDE: 0.05, // 增加 X 軸旋轉幅度 (原: 0.03)
   POSITION_Y_AMPLITUDE: 0.08, // 增加 Y 軸位移幅度 (原: 0.06)

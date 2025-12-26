@@ -28,7 +28,7 @@ export default function WinnerRecordBoard() {
   const currentPrize = latestRoundRecords[0]?.prize || "";
 
   return (
-    <div className="w-[20vw] min-w-[280px] max-h-[60vh] overflow-y-auto bg-white/95 rounded-xl p-4 shadow-lg backdrop-blur-sm">
+    <div className="max-h-[45vh] overflow-y-auto bg-white/95 rounded-xl p-4 shadow-lg backdrop-blur-sm">
       {/* 標題 */}
       <div className="mb-3 border-b-2 border-gray-200 pb-2">
         <h3 className="text-lg font-bold text-gray-800">🏆 本輪中獎</h3>
@@ -53,8 +53,13 @@ export default function WinnerRecordBoard() {
                 #{index + 1}
               </span>
               <div className="flex-1 text-base font-bold text-gray-800 flex justify-between max-w-[200px]">
-                  <span className="pr-2">{record.name}</span>
-                  <span>員編：{record.employeeId}</span>
+                <span className="pr-2">{record.name}</span>
+                <>
+                  <span className="hidden xl:inline">
+                    員編：
+                  </span>
+                  <span>{record.employeeId}</span>
+                </>
               </div>
             </div>
           </div>

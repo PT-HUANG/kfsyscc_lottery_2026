@@ -11,12 +11,13 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [groupName, setGroupName] = useState<string>(""); // 分組名稱
 
   const setParticipants = useAnimationStore((state) => state.setParticipants);
   const participants = useAnimationStore((state) => state.participants);
 
   const parseTextFile = useCallback(
-    async (file: File): Promise<Participant[]> => {
+    async (file: File, group: string): Promise<Participant[]> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -61,6 +62,7 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
                 name,
                 employeeId,
                 department: fullDepartment,
+                group, // 設定分組（必填）
               };
             });
 
@@ -86,6 +88,12 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
       setIsProcessing(true);
 
       try {
+        // 驗證分組名稱（必填）
+        const trimmedGroup = groupName.trim();
+        if (!trimmedGroup) {
+          throw new Error("請輸入分組名稱！分組為必填欄位。");
+        }
+
         // 驗證檔案類型
         if (!file.name.endsWith(".txt")) {
           throw new Error("請上傳 .txt 格式的檔案");
@@ -96,16 +104,19 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
           throw new Error("檔案大小不能超過 5MB");
         }
 
-        // 解析檔案
-        const newParticipants = await parseTextFile(file);
+        // 解析檔案（傳入分組名稱）
+        const newParticipants = await parseTextFile(file, trimmedGroup);
 
-        // 更新 store
-        setParticipants(newParticipants);
+        // 追加到現有參與者列表（而非替換）
+        setParticipants([...participants, ...newParticipants]);
 
         // 呼叫回調
         if (onUploadComplete) {
           onUploadComplete(newParticipants.length);
         }
+
+        // 清空分組名稱輸入框
+        setGroupName("");
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "上傳檔案時發生未知錯誤";
@@ -114,7 +125,7 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
         setIsProcessing(false);
       }
     },
-    [parseTextFile, setParticipants, onUploadComplete]
+    [parseTextFile, setParticipants, onUploadComplete, groupName, participants]
   );
 
   const handleInputChange = useCallback(
@@ -155,6 +166,26 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
 
   return (
     <div className="w-full space-y-4">
+      {/* 分組名稱輸入框 */}
+      <div className="space-y-2">
+        <label htmlFor="groupName" className="block text-sm font-medium text-gray-700">
+          分組名稱 <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="groupName"
+          type="text"
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+          placeholder="例如：VIP組、一般員工、管理層"
+          disabled={isProcessing}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          required
+        />
+        <p className="text-xs text-gray-500">
+          上傳的參與者將自動標記為此分組。<span className="text-red-600 font-medium">分組為必填</span>。
+        </p>
+      </div>
+
       {/* 拖放上傳區域 */}
       <div
         onDragOver={handleDragOver}
@@ -163,16 +194,21 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
         className={`
           relative border-2 border-dashed rounded-lg p-8
           transition-colors duration-200
-          ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"}
-          ${isProcessing ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-blue-400"}
+          ${
+            isProcessing || !groupName.trim()
+              ? "border-gray-300 bg-gray-200 opacity-60 cursor-not-allowed"
+              : isDragging
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-300 bg-gray-50 cursor-pointer hover:border-blue-400"
+          }
         `}
       >
         <input
           type="file"
           accept=".txt"
           onChange={handleInputChange}
-          disabled={isProcessing}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          disabled={isProcessing || !groupName.trim()}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
         />
 
         <div className="text-center space-y-2">
@@ -189,6 +225,7 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
               姓名 員工編號 部門
             </div>
             <div className="text-gray-500">（用空格或 Tab 分隔，員工編號和部門可省略）</div>
+            <div className="text-blue-600 font-medium mt-2">💡 支援多次上傳不同分組的名單</div>
           </div>
         </div>
       </div>

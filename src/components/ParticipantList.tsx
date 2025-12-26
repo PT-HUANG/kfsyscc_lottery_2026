@@ -13,10 +13,16 @@ export default function ParticipantList() {
   const [newName, setNewName] = useState("");
   const [newEmployeeId, setNewEmployeeId] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
+  const [newGroup, setNewGroup] = useState("");
 
   const handleAddParticipant = () => {
     if (!newName.trim()) {
       alert("請輸入姓名");
+      return;
+    }
+
+    if (!newGroup.trim()) {
+      alert("請輸入分組");
       return;
     }
 
@@ -25,12 +31,14 @@ export default function ParticipantList() {
       name: newName.trim(),
       employeeId: newEmployeeId.trim() || undefined,
       department: newDepartment.trim() || undefined,
+      group: newGroup.trim(),
     });
 
     // 清空表單
     setNewName("");
     setNewEmployeeId("");
     setNewDepartment("");
+    setNewGroup("");
     setShowAddForm(false);
   };
 
@@ -85,7 +93,7 @@ export default function ParticipantList() {
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 員工編號
@@ -108,6 +116,19 @@ export default function ParticipantList() {
                 onChange={(e) => setNewDepartment(e.target.value)}
                 placeholder="選填"
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                分組 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={newGroup}
+                onChange={(e) => setNewGroup(e.target.value)}
+                placeholder="必填"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
           </div>
@@ -145,6 +166,9 @@ export default function ParticipantList() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     部門
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    分組
+                  </th>
                   <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
                     操作
                   </th>
@@ -167,6 +191,11 @@ export default function ParticipantList() {
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-600">
                       {participant.department || "-"}
+                    </td>
+                    <td className="px-4 py-2 text-sm">
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                        {participant.group}
+                      </span>
                     </td>
                     <td className="px-4 py-2 text-center">
                       <button

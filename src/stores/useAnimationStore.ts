@@ -7,6 +7,7 @@ export interface WinnerRecord {
   name: string;
   employeeId?: string; // 員工編號
   department?: string; // 部門
+  group: string; // 分組（必填）
   prize: string;
   color: string;
   timestamp: number;
@@ -17,6 +18,7 @@ export interface Participant {
   name: string;
   employeeId?: string;
   department?: string;
+  group: string; // 分組（必填，如：VIP組、一般員工）
 }
 
 export interface Prize {
@@ -25,6 +27,7 @@ export interface Prize {
   level: number;
   quantity: number;
   description?: string;
+  allowedGroup?: string; // 限定分組（僅該分組可抽，未設定則所有人可抽）
 }
 
 interface AnimationStore {
@@ -32,6 +35,10 @@ interface AnimationStore {
   isAnimating: boolean;
   setIsAnimating: (value: boolean) => void;
   toggleAnimation: () => void;
+
+  // 中獎彈窗狀態（不持久化）
+  showWinnerModal: boolean;
+  setShowWinnerModal: (value: boolean) => void;
 
   // 中獎紀錄（持久化）
   winnerRecords: WinnerRecord[];
@@ -62,6 +69,10 @@ export const useAnimationStore = create<AnimationStore>()(
       setIsAnimating: (value) => set({ isAnimating: value }),
       toggleAnimation: () =>
         set((state) => ({ isAnimating: !state.isAnimating })),
+
+      // 中獎彈窗狀態
+      showWinnerModal: false,
+      setShowWinnerModal: (value) => set({ showWinnerModal: value }),
 
       // 中獎紀錄
       winnerRecords: [],

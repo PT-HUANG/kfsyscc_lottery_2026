@@ -6,6 +6,7 @@ import Scene from "@/components/Scene";
 import { Button } from "@/components/ui/button";
 import WinnerRecordBoard from "@/components/WinnerRecordBoard";
 import ManagementModal from "@/components/ManagementModal";
+import FloatingBackgroundPanel from "@/components/FloatingBackgroundPanel";
 import { useAnimationStore } from "@/stores/useAnimationStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
 import "./loading.css";
@@ -63,28 +64,48 @@ export default function GachaPage() {
   const [progress, setProgress] = useState(0);
   const [sceneReady, setSceneReady] = useState(false);
   const [showManagement, setShowManagement] = useState(false);
+  const [showBgPanel, setShowBgPanel] = useState(false);
+
+  // 背景設定狀態
+  const [bgConfig, setBgConfig] = useState({
+    positionX: 4,
+    positionY: 20,
+    positionZ: -60,
+    scale: 150,
+  });
 
   // 使用 Zustand store
   const { isAnimating, setIsAnimating } = useAnimationStore();
+  const showWinnerModal = useAnimationStore((state) => state.showWinnerModal);
 
   // 抽獎邏輯
-  const { validateLottery, prizes, winnerRecords } = useLotteryLogic();
+  const { validateLottery, prizes, winnerRecords, participants } =
+    useLotteryLogic();
 
   // 獎項選擇狀態
   const [selectedPrizeId, setSelectedPrizeId] = useState<string>("");
   const [drawMode, setDrawMode] = useState<"single" | "all">("all"); // single: 一次抽一個, all: 一次抽全部
+  const [selectedGroup, setSelectedGroup] = useState<string>(""); // 選擇的分組（空字串表示全部）
+
+  // 獲取所有可用的分組（去重，group 現在是必填）
+  const availableGroups = Array.from(
+    new Set(participants.map((p) => p.group))
+  ).sort();
 
   // 計算獎項的剩餘名額
-  const getPrizeRemainingSlots = useCallback((prizeId: string) => {
-    const prize = prizes.find((p) => p.id === prizeId);
-    if (!prize) return 0;
+  const getPrizeRemainingSlots = useCallback(
+    (prizeId: string) => {
+      const prize = prizes.find((p) => p.id === prizeId);
+      if (!prize) return 0;
 
-    const winnersForThisPrize = winnerRecords.filter(
-      (record) => record.prize === prize.name
-    ).length;
+      const winnersForThisPrize = winnerRecords.filter(
+        (record) => record.prize === prize.name
+      ).length;
 
-    return Math.max(0, prize.quantity - winnersForThisPrize);
-  }, [prizes, winnerRecords]);
+      return Math.max(0, prize.quantity - winnersForThisPrize);
+    },
+    [prizes, winnerRecords]
+  );
 
   // 開始抽獎前驗證
   const handleStartLottery = () => {
@@ -116,8 +137,17 @@ export default function GachaPage() {
     // 計算本次要抽取的人數
     const drawCount = drawMode === "all" ? remainingSlots : 1;
 
-    // 檢查是否有足夠的參與者（排除已中獎者）
-    const validation = validateLottery(drawCount, { skipWinners: true });
+    // 檢查是否選擇了分組
+    if (!selectedGroup) {
+      alert("請選擇要抽獎的分組！");
+      return;
+    }
+
+    // 檢查是否有足夠的參與者（排除已中獎者，考慮分組篩選）
+    const validation = validateLottery(drawCount, {
+      skipWinners: true,
+      selectedGroup: selectedGroup,
+    });
     if (!validation.valid) {
       alert(validation.error || "無法進行抽獎，請確認參與者名單。");
       return;
@@ -175,6 +205,17 @@ export default function GachaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prizes, selectedPrizeId, winnerRecords]);
 
+  // 🎯 當選擇的獎項有 allowedGroup 限制時，自動設定正確的分組
+  useEffect(() => {
+    if (selectedPrizeId) {
+      const selectedPrize = prizes.find((p) => p.id === selectedPrizeId);
+      if (selectedPrize?.allowedGroup) {
+        // 如果獎項有分組限制，自動設定該分組
+        setSelectedGroup(selectedPrize.allowedGroup);
+      }
+    }
+  }, [selectedPrizeId, prizes]);
+
   return (
     <>
       {/* Scene始终渲染，用z-index和opacity控制显示 */}
@@ -199,23 +240,25 @@ export default function GachaPage() {
               ? getPrizeRemainingSlots(selectedPrizeId)
               : 1
           }
+          selectedGroup={selectedGroup}
+          backgroundConfig={bgConfig}
         />
       </div>
 
       {/* 控制按钮和計分版 */}
-      {!loading && (
-        <div className="fixed top-5 right-5 z-10 flex flex-col items-stretch gap-4 min-w-[320px]">
+      {!loading && !isAnimating && !showWinnerModal && (
+        <div className="fixed top-3 right-3 z-10 flex flex-col items-stretch gap-3 w-[25vw] max-w-[360px]">
           {/* 獎項選擇器 */}
           {prizes.length > 0 && (
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 space-y-3">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 space-y-2">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700">
                   選擇獎項
                 </label>
                 <select
                   value={selectedPrizeId}
                   onChange={(e) => setSelectedPrizeId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                   disabled={isAnimating}
                 >
                   {[...prizes]
@@ -231,16 +274,53 @@ export default function GachaPage() {
                 </select>
               </div>
 
+              {/* 分組選擇器 */}
+              {availableGroups.length > 0 && (() => {
+                const selectedPrize = prizes.find((p) => p.id === selectedPrizeId);
+                const isGroupLocked = !!selectedPrize?.allowedGroup;
+
+                return (
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-700">
+                      選擇分組 <span className="text-red-500">*</span>
+                      {isGroupLocked && (
+                        <span className="ml-1 text-xs font-normal text-orange-600">
+                          (此獎項限定分組)
+                        </span>
+                      )}
+                    </label>
+                    <select
+                      value={selectedGroup}
+                      onChange={(e) => setSelectedGroup(e.target.value)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      disabled={isAnimating || isGroupLocked}
+                    >
+                      <option value="">請選擇分組</option>
+                      {availableGroups.map((group) => (
+                        <option key={group} value={group}>
+                          {group}
+                        </option>
+                      ))}
+                    </select>
+                    {isGroupLocked && selectedPrize?.allowedGroup && (
+                      <p className="text-xs text-orange-600 mt-1">
+                        此獎項僅限「{selectedPrize.allowedGroup}」分組參與
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* 抽獎模式 */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700">
                   抽獎模式
                 </label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setDrawMode("single")}
                     disabled={isAnimating}
-                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 px-3 py-3 rounded-md text-xs font-medium transition-colors ${
                       drawMode === "single"
                         ? "bg-pink-500 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -251,7 +331,7 @@ export default function GachaPage() {
                   <button
                     onClick={() => setDrawMode("all")}
                     disabled={isAnimating}
-                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 px-3 py-3 rounded-md text-xs font-medium transition-colors ${
                       drawMode === "all"
                         ? "bg-pink-500 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -264,7 +344,7 @@ export default function GachaPage() {
 
               {/* 顯示本次將抽取的人數 */}
               {selectedPrizeId && (
-                <div className="text-center text-sm text-gray-600 bg-pink-50 rounded px-3 py-2">
+                <div className="text-center text-xs text-gray-600 bg-pink-50 rounded px-2 py-3">
                   本次將抽取：
                   <span className="font-bold text-pink-600 ml-1">
                     {drawMode === "all"
@@ -278,24 +358,36 @@ export default function GachaPage() {
           )}
 
           {/* 抽獎按鈕 */}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <Button
               onClick={handleStartLottery}
-              size="lg"
               disabled={isAnimating || prizes.length === 0}
-              className="flex-1 text-xl font-semibold py-6 bg-gradient-to-br from-pink-400 via-pink-500 to-rose-500 hover:from-pink-500 hover:via-pink-600 hover:to-rose-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 text-lg font-semibold py-3 bg-gradient-to-br from-pink-400 via-pink-500 to-rose-500 hover:from-pink-500 hover:via-pink-600 hover:to-rose-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {prizes.length === 0 ? "請先設定獎項" : "開始抽獎"}
             </Button>
 
-            {/* 管理按鈕 */}
-            <Button
-              onClick={() => setShowManagement(true)}
-              size="lg"
-              className="min-w-[120px] text-xl font-semibold py-6 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-500 hover:from-blue-500 hover:via-blue-600 hover:to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              管理
-            </Button>
+            <div className="flex gap-2">
+              {/* 管理按鈕 */}
+              <Button
+                onClick={() => setShowManagement(true)}
+                className="flex-1 text-lg font-semibold py-6 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-500 hover:from-blue-500 hover:via-blue-600 hover:to-indigo-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                管理
+              </Button>
+
+              {/* 背景設定按鈕 */}
+              <Button
+                onClick={() => setShowBgPanel(!showBgPanel)}
+                className={`flex-1 text-lg font-semibold py-6 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 ${
+                  showBgPanel
+                    ? "bg-gradient-to-br from-purple-600 via-purple-700 to-violet-700 ring-4 ring-purple-300"
+                    : "bg-gradient-to-br from-purple-400 via-purple-500 to-violet-500 hover:from-purple-500 hover:via-purple-600 hover:to-violet-600"
+                }`}
+              >
+                背景
+              </Button>
+            </div>
           </div>
 
           {/* 計分版 */}
@@ -308,6 +400,15 @@ export default function GachaPage() {
         isOpen={showManagement}
         onClose={() => setShowManagement(false)}
       />
+
+      {/* 浮動背景設定面板 */}
+      {!loading && !isAnimating && !showWinnerModal && showBgPanel && (
+        <FloatingBackgroundPanel
+          config={bgConfig}
+          onChange={setBgConfig}
+          onClose={() => setShowBgPanel(false)}
+        />
+      )}
 
       {/* Loading覆盖在上面 */}
       {loading && (
