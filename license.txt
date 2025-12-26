@@ -1,0 +1,11 @@
+Model Information:
+* title:	Gacha machine upload
+* source:	https://sketchfab.com/3d-models/gacha-machine-upload-c2ff648add1e4062bb16313ce40ab5e3
+* author:	ChesterLin (https://sketchfab.com/ChesterLin)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Gacha machine upload" (https://sketchfab.com/3d-models/gacha-machine-upload-c2ff648add1e4062bb16313ce40ab5e3) by ChesterLin (https://sketchfab.com/ChesterLin) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

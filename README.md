@@ -450,6 +450,10 @@ A: 支援，但建議使用桌機以獲得最佳體驗（3D 效能、螢幕大�
 - [Vercel](https://vercel.com) - Next.js 框架
 - [Shadcn](https://ui.shadcn.com) - UI 組件庫
 
+### 3D 模型授權
+
+本專案使用的 Gacha machine 3D 模型基於 [ChesterLin](https://sketchfab.com/ChesterLin) 的作品 "[Gacha machine upload](https://sketchfab.com/3d-models/gacha-machine-upload-c2ff648add1e4062bb16313ce40ab5e3)"，依據 [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/) 許可證授權使用。
+
 ---
 
 **🎰 立即開始使用，為您的活動增添科技感與趣味性！**

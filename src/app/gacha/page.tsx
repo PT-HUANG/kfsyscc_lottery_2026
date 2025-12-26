@@ -54,6 +54,39 @@ function LoadingScene({ progress }: { progress: number }) {
           </div>
           <div className="progress-text">{Math.round(progress)}%</div>
         </div>
+
+        {/* 3D模型授權資訊 */}
+        <div className="text-center mt-8 text-base text-gray-400 max-w-2xl mx-auto px-4">
+          <p>
+            3D Model based on{" "}
+            <a
+              href="https://sketchfab.com/3d-models/gacha-machine-upload-c2ff648add1e4062bb16313ce40ab5e3"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              &quot;Gacha machine upload&quot;
+            </a>{" "}
+            by{" "}
+            <a
+              href="https://sketchfab.com/ChesterLin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              ChesterLin
+            </a>
+            , licensed under{" "}
+            <a
+              href="http://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              CC-BY-4.0
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
