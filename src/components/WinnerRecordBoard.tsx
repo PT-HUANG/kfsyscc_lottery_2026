@@ -53,12 +53,12 @@ export default function WinnerRecordBoard() {
                 #{index + 1}
               </span>
               <div className="flex-1 text-base font-bold text-gray-800 flex justify-between max-w-[200px]">
-                <span className="pr-2">{record.name}</span>
+                <span className="px-2">{record.name}</span>
                 <>
                   <span className="hidden xl:inline">
-                    員編：
+                    員編：{record.employeeId}
                   </span>
-                  <span>{record.employeeId}</span>
+                  <span className="xl:hidden">{record.employeeId}</span>
                 </>
               </div>
             </div>

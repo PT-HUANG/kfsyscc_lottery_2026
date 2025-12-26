@@ -68,9 +68,9 @@ export default function GachaPage() {
 
   // 背景設定狀態
   const [bgConfig, setBgConfig] = useState({
-    positionX: 4,
-    positionY: 20,
-    positionZ: -60,
+    positionX: 11,
+    positionY: -1,
+    positionZ: -67,
     scale: 150,
   });
 
@@ -91,6 +91,19 @@ export default function GachaPage() {
   const availableGroups = Array.from(
     new Set(participants.map((p) => p.group))
   ).sort();
+
+  // 根據選擇的分組過濾獎項
+  const getFilteredPrizes = useCallback(() => {
+    if (!selectedGroup) {
+      return []; // 沒選分組，不顯示任何獎項
+    }
+    return prizes.filter((prize) => {
+      // 如果獎項沒有限定分組，或限定分組等於選擇的分組，則顯示
+      return !prize.allowedGroup || prize.allowedGroup === selectedGroup;
+    });
+  }, [prizes, selectedGroup]);
+
+  const filteredPrizes = getFilteredPrizes();
 
   // 計算獎項的剩餘名額
   const getPrizeRemainingSlots = useCallback(
@@ -189,32 +202,36 @@ export default function GachaPage() {
     setSceneReady(true);
   }, []);
 
-  // 自動選擇第一個有剩餘名額的獎項
+  // 🎯 當分組改變時，自動選擇第一個可用的獎項
   useEffect(() => {
-    if (!selectedPrizeId && prizes.length > 0) {
-      // 按照等級排序（從小到大），選擇第一個有剩餘名額的獎項
-      const sortedPrizes = [...prizes].sort((a, b) => a.level - b.level);
+    if (!selectedGroup) {
+      // 如果沒有選擇分組，清空獎項選擇
+      setSelectedPrizeId("");
+      return;
+    }
+
+    // 檢查當前選擇的獎項是否還在過濾後的列表中
+    const isCurrentPrizeValid = filteredPrizes.some(
+      (p) => p.id === selectedPrizeId
+    );
+
+    if (!isCurrentPrizeValid || !selectedPrizeId) {
+      // 如果當前獎項無效，或沒有選擇，則自動選擇第一個有剩餘名額的獎項
+      const sortedPrizes = [...filteredPrizes].sort(
+        (a, b) => a.level - b.level
+      );
       const firstAvailable = sortedPrizes.find((prize) => {
         const remaining = getPrizeRemainingSlots(prize.id);
         return remaining > 0;
       });
       if (firstAvailable) {
         setSelectedPrizeId(firstAvailable.id);
+      } else {
+        setSelectedPrizeId("");
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prizes, selectedPrizeId, winnerRecords]);
-
-  // 🎯 當選擇的獎項有 allowedGroup 限制時，自動設定正確的分組
-  useEffect(() => {
-    if (selectedPrizeId) {
-      const selectedPrize = prizes.find((p) => p.id === selectedPrizeId);
-      if (selectedPrize?.allowedGroup) {
-        // 如果獎項有分組限制，自動設定該分組
-        setSelectedGroup(selectedPrize.allowedGroup);
-      }
-    }
-  }, [selectedPrizeId, prizes]);
+  }, [selectedGroup, filteredPrizes]);
 
   return (
     <>
@@ -248,73 +265,75 @@ export default function GachaPage() {
       {/* 控制按钮和計分版 */}
       {!loading && !isAnimating && !showWinnerModal && (
         <div className="fixed top-3 right-3 z-10 flex flex-col items-stretch gap-3 w-[25vw] max-w-[360px]">
-          {/* 獎項選擇器 */}
+          {/* 抽獎設定面板 */}
           {prizes.length > 0 && (
             <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 space-y-2">
+              {/* 1️⃣ 分組選擇器（先選擇分組） */}
+              {availableGroups.length > 0 && (
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700">
+                    1️⃣ 選擇分組 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedGroup}
+                    onChange={(e) => setSelectedGroup(e.target.value)}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={isAnimating}
+                  >
+                    <option value="">請選擇分組</option>
+                    {availableGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* 2️⃣ 獎項選擇器（根據分組顯示對應獎項） */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-700">
-                  選擇獎項
+                  2️⃣ 選擇獎項
+                  {!selectedGroup && (
+                    <span className="ml-1 text-xs font-normal text-orange-600">
+                      (請先選擇分組)
+                    </span>
+                  )}
+                  {selectedGroup && filteredPrizes.length === 0 && (
+                    <span className="ml-1 text-xs font-normal text-red-600">
+                      (此分組沒有可用獎項)
+                    </span>
+                  )}
                 </label>
                 <select
                   value={selectedPrizeId}
                   onChange={(e) => setSelectedPrizeId(e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  disabled={isAnimating}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  disabled={isAnimating || !selectedGroup || filteredPrizes.length === 0}
                 >
-                  {[...prizes]
-                    .sort((a, b) => a.level - b.level)
-                    .map((prize) => {
-                      const remaining = getPrizeRemainingSlots(prize.id);
-                      return (
-                        <option key={prize.id} value={prize.id}>
-                          {prize.name} (剩餘 {remaining}/{prize.quantity} 名)
-                        </option>
-                      );
-                    })}
+                  {!selectedGroup && <option value="">請先選擇分組</option>}
+                  {selectedGroup && filteredPrizes.length === 0 && (
+                    <option value="">此分組沒有可用獎項</option>
+                  )}
+                  {selectedGroup &&
+                    filteredPrizes.length > 0 &&
+                    [...filteredPrizes]
+                      .sort((a, b) => a.level - b.level)
+                      .map((prize) => {
+                        const remaining = getPrizeRemainingSlots(prize.id);
+                        return (
+                          <option key={prize.id} value={prize.id}>
+                            {prize.name} (剩餘 {remaining}/{prize.quantity} 名)
+                          </option>
+                        );
+                      })}
                 </select>
               </div>
 
-              {/* 分組選擇器 */}
-              {availableGroups.length > 0 && (() => {
-                const selectedPrize = prizes.find((p) => p.id === selectedPrizeId);
-                const isGroupLocked = !!selectedPrize?.allowedGroup;
-
-                return (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-700">
-                      選擇分組 <span className="text-red-500">*</span>
-                      {isGroupLocked && (
-                        <span className="ml-1 text-xs font-normal text-orange-600">
-                          (此獎項限定分組)
-                        </span>
-                      )}
-                    </label>
-                    <select
-                      value={selectedGroup}
-                      onChange={(e) => setSelectedGroup(e.target.value)}
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      disabled={isAnimating || isGroupLocked}
-                    >
-                      <option value="">請選擇分組</option>
-                      {availableGroups.map((group) => (
-                        <option key={group} value={group}>
-                          {group}
-                        </option>
-                      ))}
-                    </select>
-                    {isGroupLocked && selectedPrize?.allowedGroup && (
-                      <p className="text-xs text-orange-600 mt-1">
-                        此獎項僅限「{selectedPrize.allowedGroup}」分組參與
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* 抽獎模式 */}
+              {/* 3️⃣ 抽獎模式 */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-700">
-                  抽獎模式
+                  3️⃣ 抽獎模式
                 </label>
                 <div className="flex gap-2">
                   <button
@@ -322,7 +341,7 @@ export default function GachaPage() {
                     disabled={isAnimating}
                     className={`flex-1 px-3 py-3 rounded-md text-xs font-medium transition-colors ${
                       drawMode === "single"
-                        ? "bg-pink-500 text-white"
+                        ? "bg-lime-400 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
@@ -333,11 +352,11 @@ export default function GachaPage() {
                     disabled={isAnimating}
                     className={`flex-1 px-3 py-3 rounded-md text-xs font-medium transition-colors ${
                       drawMode === "all"
-                        ? "bg-pink-500 text-white"
+                        ? "bg-cyan-400 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    抽全部剩餘
+                    抽全部
                   </button>
                 </div>
               </div>
@@ -349,7 +368,7 @@ export default function GachaPage() {
                   <span className="font-bold text-pink-600 ml-1">
                     {drawMode === "all"
                       ? getPrizeRemainingSlots(selectedPrizeId)
-                      : 1}{" "}
+                      : getPrizeRemainingSlots(selectedPrizeId) === 0 ? 0 : 1}{" "}
                     人
                   </span>
                 </div>

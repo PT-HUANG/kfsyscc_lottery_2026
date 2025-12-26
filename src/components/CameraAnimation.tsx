@@ -12,7 +12,7 @@ export default function CameraAnimation() {
   const initialAngle = 0; // 初始角度
   const targetAngle = Math.PI * 2; // 目标角度（360度 = 2π）
   const initialHeight = 6; // 初始高度（俯视）
-  const targetHeight = -1; // 目标高度（平视）
+  const targetHeight = 2.5; // 目标高度（平视）
 
   useFrame((_state, delta) => {
     // 先累积时间，等待延迟

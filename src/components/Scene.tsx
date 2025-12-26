@@ -17,7 +17,7 @@ import GachaBall from "@/components/GachaBall";
 import WinnerModal from "@/components/WinnerModal";
 import { useAnimationStore } from "@/stores/useAnimationStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
-import { type BackgroundConfig } from "@/components/BackgroundSettings";
+import { type BackgroundConfig } from "@/components/FloatingBackgroundPanel";
 import {
   COIN_CONFIG,
   SHAKE_CONFIG,
@@ -47,7 +47,7 @@ function BackgroundPlane({ config }: BackgroundPlaneProps) {
       position={[config.positionX, config.positionY, config.positionZ]}
       renderOrder={-1}
     >
-      <planeGeometry args={[config.scale, config.scale]} />
+      <planeGeometry args={[config.scale * 1.5, config.scale]} />
       <meshBasicMaterial
         map={texture}
         toneMapped={false} // 停用色調映射以保持原始顏色
@@ -250,8 +250,8 @@ function GachaScene({
       const [startX, startY, startZ] = floatingStartPosition.current;
       setFloatingBallPosition([
         startX - eased * 1.25,
-        startY + eased * 3.5, // 向上浮起 6 個單位
-        startZ + eased * 7,
+        startY + eased * 5,
+        startZ + eased * 6,
       ]);
     }
 

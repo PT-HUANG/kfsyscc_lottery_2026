@@ -1,6 +1,11 @@
 "use client";
 
-import { type BackgroundConfig } from "@/components/BackgroundSettings";
+export interface BackgroundConfig {
+  positionX: number;
+  positionY: number;
+  positionZ: number;
+  scale: number;
+}
 
 interface FloatingBackgroundPanelProps {
   config: BackgroundConfig;
@@ -208,9 +213,9 @@ export default function FloatingBackgroundPanel({
           <button
             onClick={() =>
               onChange({
-                positionX: 4,
-                positionY: 20,
-                positionZ: -60,
+                positionX: 11,
+                positionY: -1,
+                positionZ: -67,
                 scale: 150,
               })
             }
