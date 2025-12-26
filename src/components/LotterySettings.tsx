@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
+import { useAnimationStore } from "@/stores/useAnimationStore";
 
 export default function LotterySettings() {
   const {
@@ -11,7 +12,10 @@ export default function LotterySettings() {
     prizes,
   } = useLotteryLogic();
 
-  const [skipWinners, setSkipWinners] = useState(true);
+  // 使用全域狀態，而不是本地狀態
+  const skipWinners = useAnimationStore((state) => state.skipWinners);
+  const setSkipWinners = useAnimationStore((state) => state.setSkipWinners);
+
   const [testResult, setTestResult] = useState<string | null>(null);
 
   const handleTestDraw = () => {

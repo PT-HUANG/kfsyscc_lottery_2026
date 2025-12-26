@@ -127,6 +127,7 @@ function GachaScene({
   const addWinnerRecord = useAnimationStore((state) => state.addWinnerRecord);
   const showWinnerModal = useAnimationStore((state) => state.showWinnerModal);
   const setShowWinnerModal = useAnimationStore((state) => state.setShowWinnerModal);
+  const skipWinners = useAnimationStore((state) => state.skipWinners); // 讀取全域設定
 
   // 抽獎邏輯
   const { drawMultipleWinners, prizes } = useLotteryLogic();
@@ -334,7 +335,7 @@ function GachaScene({
 
     // 🎲 執行真實抽獎（抽取多人，考慮分組篩選）
     const lotteryResult = drawMultipleWinners(drawCount, {
-      skipWinners: true,
+      skipWinners: skipWinners, // 使用全域設定（由管理後台控制）
       selectedGroup: effectiveGroup,
     });
 

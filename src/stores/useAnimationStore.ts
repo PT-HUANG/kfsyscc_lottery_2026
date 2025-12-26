@@ -40,6 +40,10 @@ interface AnimationStore {
   showWinnerModal: boolean;
   setShowWinnerModal: (value: boolean) => void;
 
+  // 抽獎設定（持久化）
+  skipWinners: boolean; // 是否跳過已中獎者（防重複中獎）
+  setSkipWinners: (value: boolean) => void;
+
   // 中獎紀錄（持久化）
   winnerRecords: WinnerRecord[];
   addWinnerRecord: (record: Omit<WinnerRecord, "timestamp" | "recordId">) => void;
@@ -73,6 +77,10 @@ export const useAnimationStore = create<AnimationStore>()(
       // 中獎彈窗狀態
       showWinnerModal: false,
       setShowWinnerModal: (value) => set({ showWinnerModal: value }),
+
+      // 抽獎設定
+      skipWinners: true, // 預設啟用防重複中獎
+      setSkipWinners: (value) => set({ skipWinners: value }),
 
       // 中獎紀錄
       winnerRecords: [],
@@ -126,6 +134,7 @@ export const useAnimationStore = create<AnimationStore>()(
       storage: createJSONStorage(() => localStorage),
       // 只持久化需要保存的狀態，動畫狀態不持久化
       partialize: (state) => ({
+        skipWinners: state.skipWinners,
         winnerRecords: state.winnerRecords,
         participants: state.participants,
         prizes: state.prizes,
