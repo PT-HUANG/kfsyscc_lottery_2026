@@ -80,7 +80,11 @@ export const useAnimationStore = create<AnimationStore>()(
         set((state) => ({
           winnerRecords: [
             ...state.winnerRecords,
-            { ...record, timestamp: Date.now() },
+            {
+              ...record,
+              recordId: `${record.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+              timestamp: Date.now()
+            },
           ],
         })),
       clearWinnerRecords: () => set({ winnerRecords: [] }),
