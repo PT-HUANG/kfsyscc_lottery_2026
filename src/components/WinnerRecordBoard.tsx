@@ -28,14 +28,14 @@ export default function WinnerRecordBoard() {
   const currentPrize = latestRoundRecords[0]?.prize || "";
 
   return (
-    <div className="max-h-[45vh] overflow-y-auto bg-white/95 rounded-xl p-4 shadow-lg backdrop-blur-sm">
+    <div className="overflow-y-auto bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg p-4 shadow-[0_8px_30px_rgba(168,85,247,0.2)] backdrop-blur-sm border-2 border-amber-400">
       {/* 標題 */}
-      <div className="mb-3 border-b-2 border-gray-200 pb-2">
-        <h3 className="text-lg font-bold text-gray-800">🏆 本輪中獎</h3>
-        <div className="text-sm text-purple-600 font-semibold mt-1">
+      <div className="mb-3 border-b-2 border-amber-300 pb-2">
+        <h3 className="text-lg font-bold text-amber-900">本輪中獎</h3>
+        <div className="text-sm text-amber-800 font-semibold mt-1">
           {currentPrize}
         </div>
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="text-xs text-amber-700 mt-1">
           共 {latestRoundRecords.length} 位中獎者
         </div>
       </div>
@@ -45,11 +45,11 @@ export default function WinnerRecordBoard() {
         {latestRoundRecords.map((record, index) => (
           <div
             key={`${record.id}-${record.timestamp}`}
-            className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 transition-all hover:shadow-md border border-purple-100"
+            className="bg-gradient-to-r from-yellow-100 to-amber-100 rounded-lg p-3 transition-all hover:shadow-md border border-amber-300"
           >
             {/* 序號和姓名 */}
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-purple-600">
+              <span className="text-lg font-bold text-amber-700">
                 #{index + 1}
               </span>
               <div className="flex-1 text-base font-bold text-gray-800 flex justify-between max-w-[200px]">

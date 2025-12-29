@@ -21,6 +21,16 @@ export default function ParticipantList() {
       return;
     }
 
+    if (!newEmployeeId.trim()) {
+      alert("請輸入員工編號");
+      return;
+    }
+
+    if (!newDepartment.trim()) {
+      alert("請輸入部門");
+      return;
+    }
+
     if (!newGroup.trim()) {
       alert("請輸入分組");
       return;
@@ -29,8 +39,8 @@ export default function ParticipantList() {
     addParticipant({
       id: `participant-${Date.now()}`,
       name: newName.trim(),
-      employeeId: newEmployeeId.trim() || undefined,
-      department: newDepartment.trim() || undefined,
+      employeeId: newEmployeeId.trim(),
+      department: newDepartment.trim(),
       group: newGroup.trim(),
     });
 
@@ -54,9 +64,9 @@ export default function ParticipantList() {
     <div className="w-full space-y-4">
       {/* 標題與統計 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">
+        <h3 className="text-lg font-semibold text-amber-900">
           參與者名單
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-amber-700">
             ({participants.length} 人)
           </span>
         </h3>
@@ -80,9 +90,9 @@ export default function ParticipantList() {
 
       {/* 新增表單 */}
       {showAddForm && (
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
+        <div className="p-4 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 border border-amber-300 rounded-lg space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-amber-900 mb-1">
               姓名 <span className="text-red-500">*</span>
             </label>
             <input
@@ -90,36 +100,36 @@ export default function ParticipantList() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="請輸入姓名"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                員工編號
+              <label className="block text-sm font-medium text-amber-900 mb-1">
+                員工編號 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={newEmployeeId}
                 onChange={(e) => setNewEmployeeId(e.target.value)}
-                placeholder="選填"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="請輸入員工編號"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                部門
+              <label className="block text-sm font-medium text-amber-900 mb-1">
+                部門 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={newDepartment}
                 onChange={(e) => setNewDepartment(e.target.value)}
-                placeholder="選填"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="請輸入部門"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-amber-900 mb-1">
                 分組 <span className="text-red-500">*</span>
               </label>
               <input
@@ -127,14 +137,14 @@ export default function ParticipantList() {
                 value={newGroup}
                 onChange={(e) => setNewGroup(e.target.value)}
                 placeholder="必填"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
           </div>
           <button
             onClick={handleAddParticipant}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="w-full px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
           >
             新增
           </button>
@@ -143,33 +153,32 @@ export default function ParticipantList() {
 
       {/* 參與者列表 */}
       {participants.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-4xl mb-2">👥</div>
+        <div className="text-center py-12 text-amber-700">
           <div>尚未新增參與者</div>
           <div className="text-sm mt-1">請上傳 TXT 檔案或手動新增</div>
         </div>
       ) : (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="border border-amber-300 rounded-lg overflow-hidden">
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full">
-              <thead className="bg-gray-100 sticky top-0">
+              <thead className="bg-gradient-to-br from-yellow-100 to-amber-100 sticky top-0">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     #
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     姓名
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     員工編號
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     部門
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     分組
                   </th>
-                  <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-center text-sm font-medium text-amber-900">
                     操作
                   </th>
                 </tr>
@@ -178,22 +187,22 @@ export default function ParticipantList() {
                 {participants.map((participant, index) => (
                   <tr
                     key={participant.id}
-                    className="border-t border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="border-t border-amber-200 hover:bg-amber-50 transition-colors"
                   >
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="px-4 py-2 text-sm text-amber-800">
                       {index + 1}
                     </td>
-                    <td className="px-4 py-2 text-sm font-medium text-gray-800">
+                    <td className="px-4 py-2 text-sm font-medium text-amber-900">
                       {participant.name}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="px-4 py-2 text-sm text-amber-800">
                       {participant.employeeId || "-"}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="px-4 py-2 text-sm text-amber-800">
                       {participant.department || "-"}
                     </td>
                     <td className="px-4 py-2 text-sm">
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-xs font-medium rounded border border-amber-300">
                         {participant.group}
                       </span>
                     </td>

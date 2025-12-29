@@ -29,40 +29,39 @@ export default function ManagementModal({
   >("participants");
 
   const tabs = [
-    { id: "participants" as const, label: "📋 參與者", icon: "👥" },
-    { id: "prizes" as const, label: "🎁 獎項", icon: "🏆" },
-    { id: "settings" as const, label: "⚙️ 設定", icon: "📊" },
-    { id: "records" as const, label: "📊 紀錄", icon: "📜" },
+    { id: "participants" as const, label: "參與者" },
+    { id: "prizes" as const, label: "獎項" },
+    { id: "settings" as const, label: "設定" },
+    { id: "records" as const, label: "紀錄" },
   ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            🎰 抽獎管理後台
+          <DialogTitle className="text-2xl font-bold text-amber-900">
+            抽獎管理後台
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-amber-700">
             管理參與者名單、獎項設定與中獎紀錄
           </DialogDescription>
         </DialogHeader>
 
         {/* 分頁導航 */}
-        <div className="flex gap-2 border-b border-gray-200 pb-2">
+        <div className="flex gap-0.5 border-b-2 border-amber-500">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                px-4 py-2 rounded-t-lg font-medium transition-colors
+                flex-1 px-4 py-3 rounded-t-lg font-bold transition-all duration-200
                 ${
                   activeTab === tab.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-amber-500 text-white shadow-[0_-2px_8px_rgba(217,119,6,0.3)]"
+                    : "bg-gradient-to-b from-amber-100 to-amber-50 text-amber-900 hover:from-amber-200 hover:to-amber-100 shadow-sm border border-amber-300 border-b-0"
                 }
               `}
             >
-              <span className="mr-1">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -73,13 +72,13 @@ export default function ManagementModal({
           {activeTab === "participants" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <h3 className="text-lg font-semibold text-amber-900 mb-4">
                   上傳參與者名單
                 </h3>
                 <ParticipantUpload />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <h3 className="text-lg font-semibold text-amber-900 mb-4">
                   參與者列表
                 </h3>
                 <ParticipantList />
@@ -90,13 +89,13 @@ export default function ManagementModal({
           {activeTab === "prizes" && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <h3 className="text-lg font-semibold text-amber-900 mb-4">
                   上傳獎項清單
                 </h3>
                 <PrizeUpload />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <h3 className="text-lg font-semibold text-amber-900 mb-4">
                   獎項列表
                 </h3>
                 <PrizeList />
@@ -115,7 +114,7 @@ export default function ManagementModal({
 
           {activeTab === "records" && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg font-semibold text-amber-900 mb-4">
                 中獎紀錄
               </h3>
               <WinnerRecordsList />
@@ -124,10 +123,10 @@ export default function ManagementModal({
         </div>
 
         {/* 底部操作按鈕 */}
-        <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-2 pt-4 border-t-2 border-amber-300">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
           >
             關閉
           </button>

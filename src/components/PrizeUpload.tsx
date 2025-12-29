@@ -188,14 +188,11 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
     <div className="w-full space-y-4">
       {/* 提示訊息：需要先上傳參與者 */}
       {participants.length === 0 && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-600 text-lg">⚠️</span>
-            <div>
-              <div className="font-medium text-yellow-800">提示</div>
-              <div className="text-sm text-yellow-700">
-                請先到「參與者」分頁上傳參與者名單，才能新增或上傳獎項。
-              </div>
+        <div className="p-4 bg-gradient-to-br from-yellow-100 to-amber-100 border border-amber-300 rounded-lg">
+          <div>
+            <div className="font-medium text-amber-900">提示</div>
+            <div className="text-sm text-amber-800">
+              請先到「參與者」分頁上傳參與者名單，才能新增或上傳獎項。
             </div>
           </div>
         </div>
@@ -204,7 +201,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
       {/* 分組選擇器 */}
       {availableGroups.length > 0 && (
         <div className="space-y-2">
-          <label htmlFor="prizeGroup" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="prizeGroup" className="block text-sm font-medium text-amber-900">
             選擇分組 <span className="text-red-500">*</span>
           </label>
           <select
@@ -212,7 +209,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
             disabled={isProcessing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
             required
           >
             <option value="">請選擇分組</option>
@@ -222,7 +219,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-amber-700">
             上傳的獎項將<span className="text-red-600 font-medium">限定</span>此分組參與者才能抽取。
           </p>
         </div>
@@ -238,10 +235,10 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
           transition-colors duration-200
           ${
             isProcessing || participants.length === 0 || !selectedGroup.trim()
-              ? "border-gray-300 bg-gray-200 opacity-60 cursor-not-allowed"
+              ? "border-amber-300 bg-amber-100 opacity-60 cursor-not-allowed"
               : isDragging
-              ? "border-purple-500 bg-purple-50"
-              : "border-gray-300 bg-gray-50 cursor-pointer hover:border-purple-400"
+              ? "border-amber-500 bg-amber-50"
+              : "border-amber-300 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 cursor-pointer hover:border-amber-400"
           }
         `}
       >
@@ -261,22 +258,21 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
         />
 
         <div className="text-center space-y-2">
-          <div className="text-4xl">🎁</div>
-          <div className="text-lg font-medium text-gray-700">
+          <div className="text-lg font-medium text-amber-900">
             {isProcessing ? "處理中..." : "上傳獎項清單"}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-amber-800">
             拖放 .txt 檔案到這裡，或點擊選擇檔案
           </div>
-          <div className="text-xs text-gray-400 space-y-1">
+          <div className="text-xs text-amber-700 space-y-1">
             <div>格式：每行一個獎項，UTF-8 編碼</div>
-            <div className="font-mono bg-gray-100 px-2 py-1 rounded inline-block">
+            <div className="font-mono bg-amber-100 px-2 py-1 rounded inline-block">
               獎品名稱 數量
             </div>
-            <div className="text-gray-500">
+            <div className="text-amber-700">
               （用空格或 Tab 分隔，等級按檔案順序自動生成）
             </div>
-            <div className="text-purple-600 font-medium mt-2">💡 支援多次上傳不同分組的獎項</div>
+            <div className="text-amber-900 font-medium mt-2">支援多次上傳不同分組的獎項</div>
           </div>
         </div>
       </div>

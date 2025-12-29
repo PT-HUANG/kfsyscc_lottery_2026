@@ -65,9 +65,9 @@ export default function WinnerRecordsList() {
     <div className="w-full space-y-4">
       {/* 標題與操作按鈕 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">
+        <h3 className="text-lg font-semibold text-amber-900">
           中獎紀錄
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-amber-700">
             (共 {winnerRecords.length} 筆)
           </span>
         </h3>
@@ -78,7 +78,7 @@ export default function WinnerRecordsList() {
                 onClick={handleExportCSV}
                 className="px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
               >
-                📥 匯出 CSV
+                匯出 CSV
               </button>
               <button
                 onClick={handleClearAll}
@@ -93,27 +93,26 @@ export default function WinnerRecordsList() {
 
       {/* 中獎紀錄列表 */}
       {winnerRecords.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-4xl mb-2">📜</div>
+        <div className="text-center py-12 text-amber-700">
           <div>尚無中獎紀錄</div>
           <div className="text-sm mt-1">開始抽獎後將顯示在這裡</div>
         </div>
       ) : (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="border border-amber-300 rounded-lg overflow-hidden">
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full">
-              <thead className="bg-gray-100 sticky top-0">
+              <thead className="bg-gradient-to-br from-yellow-100 to-amber-100 sticky top-0">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     #
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     姓名
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     員工編號
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className="px-4 py-2 text-left text-sm font-medium text-amber-900">
                     獎品名稱
                   </th>
                 </tr>
@@ -122,18 +121,18 @@ export default function WinnerRecordsList() {
                 {sortedRecords.map((record, index) => (
                   <tr
                     key={`${record.id}-${record.timestamp}`}
-                    className="border-t border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="border-t border-amber-200 hover:bg-amber-50 transition-colors"
                   >
-                    <td className="px-4 py-2 text-sm text-gray-600">
+                    <td className="px-4 py-2 text-sm text-amber-800">
                       {winnerRecords.length - index}
                     </td>
-                    <td className="px-4 py-2 text-sm font-medium text-gray-800">
+                    <td className="px-4 py-2 text-sm font-medium text-amber-900">
                       {record.name}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-600 font-mono">
+                    <td className="px-4 py-2 text-sm text-amber-800 font-mono">
                       {record.employeeId || "-"}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-800">
+                    <td className="px-4 py-2 text-sm text-amber-900">
                       {record.prize}
                     </td>
                   </tr>

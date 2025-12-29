@@ -35,9 +35,10 @@ import {
 interface BackgroundPlaneProps {
   config: BackgroundConfig;
   imageRefreshKey?: number; // 用于触发图片重新加载
+  selectedBackground: string; // 選中的預設背景名稱
 }
 
-function BackgroundPlane({ config, imageRefreshKey }: BackgroundPlaneProps) {
+function BackgroundPlane({ config, imageRefreshKey, selectedBackground }: BackgroundPlaneProps) {
   const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
   const [imageAspectRatio, setImageAspectRatio] = useState<number>(1.5); // 默认 1.5:1
 
@@ -65,8 +66,8 @@ function BackgroundPlane({ config, imageRefreshKey }: BackgroundPlaneProps) {
     loadCustomImage();
   }, [imageRefreshKey]); // 当 imageRefreshKey 变化时重新加载
 
-  // 使用自定义图片或默认图片
-  const imageUrl = customImageUrl || "/GachaBG.png";
+  // 使用自定义图片或選中的預設圖片
+  const imageUrl = customImageUrl || `/${selectedBackground}.png`;
   const originalTexture = useTexture(imageUrl);
 
   // 設定正確的色彩空間以保持原始顏色（克隆以避免修改原始 texture）
@@ -492,6 +493,7 @@ export default function Scene({
   selectedGroup,
   backgroundConfig,
   imageRefreshKey,
+  selectedBackground = "GachaBG", // 預設背景名稱，默認為 GachaBG
 }: {
   onReadyAction?: () => void;
   selectedPrizeId?: string;
@@ -499,6 +501,7 @@ export default function Scene({
   selectedGroup?: string;
   backgroundConfig: BackgroundConfig;
   imageRefreshKey?: number; // 用于触发背景图片重新加载
+  selectedBackground?: string; // 選中的預設背景名稱
 }) {
   return (
     <div
@@ -518,7 +521,11 @@ export default function Scene({
         gl={{ toneMappingExposure: 1.2 }}
       >
         {/* 背景平面 - 固定在 3D 場景中 */}
-        <BackgroundPlane config={backgroundConfig} imageRefreshKey={imageRefreshKey} />
+        <BackgroundPlane
+          config={backgroundConfig}
+          imageRefreshKey={imageRefreshKey}
+          selectedBackground={selectedBackground}
+        />
 
         <CameraAnimation />
         <Environment preset="sunset" environmentIntensity={1.5} />

@@ -84,7 +84,7 @@ export default function PrizeList() {
       allowedGroup: prize.allowedGroup || "",
     });
     setEditingId(prize.id);
-    setShowAddForm(true);
+    setShowAddForm(false); // 編輯時不顯示頂部表單
   };
 
   const handleClearAll = () => {
@@ -117,14 +117,11 @@ export default function PrizeList() {
     <div className="w-full space-y-4">
       {/* 提示訊息：需要先上傳參與者 */}
       {participants.length === 0 && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-600 text-lg">⚠️</span>
-            <div>
-              <div className="font-medium text-yellow-800">提示</div>
-              <div className="text-sm text-yellow-700">
-                請先到「參與者」分頁上傳參與者名單，才能新增或上傳獎項。
-              </div>
+        <div className="p-4 bg-gradient-to-br from-yellow-100 to-amber-100 border border-amber-300 rounded-lg">
+          <div>
+            <div className="font-medium text-amber-900">提示</div>
+            <div className="text-sm text-amber-800">
+              請先到「參與者」分頁上傳參與者名單，才能新增或上傳獎項。
             </div>
           </div>
         </div>
@@ -132,9 +129,9 @@ export default function PrizeList() {
 
       {/* 標題與統計 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800">
+        <h3 className="text-lg font-semibold text-amber-900">
           獎項列表
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-amber-700">
             ({prizes.length} 個獎項，共 {totalWinners} 個名額)
           </span>
         </h3>
@@ -143,7 +140,7 @@ export default function PrizeList() {
             onClick={handleAddPrizeClick}
             className={`px-3 py-1.5 text-sm rounded transition-colors ${
               participants.length === 0
-                ? "bg-gray-400 text-white cursor-not-allowed"
+                ? "bg-blue-200 text-blue-700 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
             title={participants.length === 0 ? "請先上傳參與者名單" : "新增獎項"}
@@ -161,15 +158,15 @@ export default function PrizeList() {
         </div>
       </div>
 
-      {/* 新增/編輯表單 */}
-      {showAddForm && (
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
-          <div className="text-sm font-medium text-gray-700 mb-2">
-            {editingId ? "編輯獎項" : "新增獎項"}
+      {/* 新增表單（只在新增時顯示在頂部） */}
+      {showAddForm && !editingId && (
+        <div className="p-4 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 border-2 border-amber-400 rounded-lg space-y-3">
+          <div className="text-sm font-medium text-amber-900 mb-2">
+            新增獎項
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-amber-900 mb-1">
               獎項名稱 <span className="text-red-500">*</span>
             </label>
             <input
@@ -177,13 +174,13 @@ export default function PrizeList() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="例如：頭獎 - iPhone 15 Pro"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-amber-900 mb-1">
                 獎項等級 <span className="text-red-500">*</span>
               </label>
               <input
@@ -193,15 +190,15 @@ export default function PrizeList() {
                 onChange={(e) =>
                   setFormData({ ...formData, level: parseInt(e.target.value) || 1 })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-amber-700 mt-1">
                 數字越小越優先抽取
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-amber-900 mb-1">
                 中獎人數 <span className="text-red-500">*</span>
               </label>
               <input
@@ -211,13 +208,13 @@ export default function PrizeList() {
                 onChange={(e) =>
                   setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-amber-900 mb-1">
               限定分組
             </label>
             {availableGroups.length > 0 ? (
@@ -226,7 +223,7 @@ export default function PrizeList() {
                 onChange={(e) =>
                   setFormData({ ...formData, allowedGroup: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 {availableGroups.map((group) => (
                   <option key={group} value={group}>
@@ -242,16 +239,16 @@ export default function PrizeList() {
                   setFormData({ ...formData, allowedGroup: e.target.value })
                 }
                 placeholder="選填，例如：VIP組（需先上傳分組參與者）"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             )}
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-amber-700 mt-1">
               選填，限定只有特定分組的參與者可以抽此獎項
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-amber-900 mb-1">
               獎項描述
             </label>
             <textarea
@@ -261,20 +258,20 @@ export default function PrizeList() {
               }
               placeholder="選填，例如：市值 NT$45,000"
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={handleSubmit}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="flex-1 px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
             >
               {editingId ? "更新" : "新增"}
             </button>
             <button
               onClick={resetForm}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+              className="px-4 py-2 bg-amber-100 text-amber-900 rounded hover:bg-amber-200 transition-colors"
             >
               取消
             </button>
@@ -284,62 +281,183 @@ export default function PrizeList() {
 
       {/* 獎項列表 */}
       {prizes.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-4xl mb-2">🏆</div>
+        <div className="text-center py-12 text-amber-700">
           <div>尚未設定獎項</div>
           <div className="text-sm mt-1">請點擊上方按鈕新增獎項</div>
         </div>
       ) : (
         <div className="space-y-3">
-          {sortedPrizes.map((prize, index) => (
-            <div
-              key={prize.id}
-              className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                      等級 {prize.level}
-                    </span>
-                    {prize.allowedGroup && (
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-                        🎯 限定：{prize.allowedGroup}
-                      </span>
-                    )}
-                    <h4 className="font-semibold text-gray-800">
-                      {prize.name}
-                    </h4>
+          {sortedPrizes.map((prize) => (
+            <div key={prize.id}>
+              {editingId === prize.id ? (
+                // 編輯模式：顯示編輯表單
+                <div className="p-4 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 border-2 border-amber-500 rounded-lg space-y-3 shadow-lg">
+                  <div className="text-sm font-medium text-amber-900 mb-2">
+                    編輯獎項
                   </div>
-                  <div className="mt-2 text-sm text-gray-600">
-                    <span className="font-medium">中獎人數：</span>
-                    {prize.quantity} 人
+
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-1">
+                      獎項名稱 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="例如：頭獎 - iPhone 15 Pro"
+                      className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
                   </div>
-                  {prize.description && (
-                    <div className="mt-1 text-sm text-gray-500">
-                      {prize.description}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-amber-900 mb-1">
+                        獎項等級 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.level}
+                        onChange={(e) =>
+                          setFormData({ ...formData, level: parseInt(e.target.value) || 1 })
+                        }
+                        className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                      <div className="text-xs text-amber-700 mt-1">
+                        數字越小越優先抽取
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="flex gap-2 ml-4">
-                  <button
-                    onClick={() => handleEdit(prize)}
-                    className="text-blue-500 hover:text-blue-700 text-sm transition-colors"
-                  >
-                    編輯
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`確定要刪除「${prize.name}」嗎？`)) {
-                        removePrize(prize.id);
+
+                    <div>
+                      <label className="block text-sm font-medium text-amber-900 mb-1">
+                        中獎人數 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.quantity}
+                        onChange={(e) =>
+                          setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })
+                        }
+                        className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-1">
+                      限定分組
+                    </label>
+                    {availableGroups.length > 0 ? (
+                      <select
+                        value={formData.allowedGroup}
+                        onChange={(e) =>
+                          setFormData({ ...formData, allowedGroup: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      >
+                        <option value="">不限定（所有分組）</option>
+                        {availableGroups.map((group) => (
+                          <option key={group} value={group}>
+                            {group}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.allowedGroup}
+                        onChange={(e) =>
+                          setFormData({ ...formData, allowedGroup: e.target.value })
+                        }
+                        placeholder="選填，例如：VIP組（需先上傳分組參與者）"
+                        className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    )}
+                    <div className="text-xs text-amber-700 mt-1">
+                      選填，限定只有特定分組的參與者可以抽此獎項
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-amber-900 mb-1">
+                      獎項描述
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
                       }
-                    }}
-                    className="text-red-500 hover:text-red-700 text-sm transition-colors"
-                  >
-                    刪除
-                  </button>
+                      placeholder="選填，例如：市值 NT$45,000"
+                      rows={2}
+                      className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSubmit}
+                      className="flex-1 px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+                    >
+                      更新
+                    </button>
+                    <button
+                      onClick={resetForm}
+                      className="px-4 py-2 bg-amber-100 text-amber-900 rounded hover:bg-amber-200 transition-colors"
+                    >
+                      取消
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                // 顯示模式：顯示獎項資訊
+                <div className="p-4 bg-gradient-to-br from-yellow-50 to-amber-50 border border-amber-300 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-xs font-medium rounded border border-amber-400">
+                          等級 {prize.level}
+                        </span>
+                        {prize.allowedGroup && (
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-xs font-medium rounded border border-amber-400">
+                            限定：{prize.allowedGroup}
+                          </span>
+                        )}
+                        <h4 className="font-semibold text-amber-900">
+                          {prize.name}
+                        </h4>
+                      </div>
+                      <div className="mt-2 text-sm text-amber-800">
+                        <span className="font-medium">中獎人數：</span>
+                        {prize.quantity} 人
+                      </div>
+                      {prize.description && (
+                        <div className="mt-1 text-sm text-amber-700">
+                          {prize.description}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <button
+                        onClick={() => handleEdit(prize)}
+                        className="text-amber-600 hover:text-amber-800 text-sm transition-colors font-medium"
+                      >
+                        編輯
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`確定要刪除「${prize.name}」嗎？`)) {
+                            removePrize(prize.id);
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm transition-colors font-medium"
+                      >
+                        刪除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

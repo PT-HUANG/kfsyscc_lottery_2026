@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   saveBackgroundImage,
   deleteBackgroundImage,
+  getBackgroundImage,
 } from "@/utils/imageStorage";
 
 export interface BackgroundConfig {
@@ -18,6 +19,8 @@ interface FloatingBackgroundPanelProps {
   onChange: (config: BackgroundConfig) => void;
   onClose: () => void;
   onImageUpload?: () => void; // 上傳圖片后的回调
+  selectedBackground: string; // 選中的預設背景
+  onBackgroundChange: (background: string) => void; // 背景切換回调
 }
 
 export default function FloatingBackgroundPanel({
@@ -25,9 +28,25 @@ export default function FloatingBackgroundPanel({
   onChange,
   onClose,
   onImageUpload,
+  selectedBackground,
+  onBackgroundChange,
 }: FloatingBackgroundPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [hasCustomImage, setHasCustomImage] = useState(false);
+
+  // 檢查是否有自定義圖片
+  useEffect(() => {
+    async function checkCustomImage() {
+      try {
+        const customImage = await getBackgroundImage();
+        setHasCustomImage(!!customImage);
+      } catch (error) {
+        setHasCustomImage(false);
+      }
+    }
+    checkCustomImage();
+  }, []);
 
   const handleChange = (key: keyof BackgroundConfig, value: number) => {
     onChange({ ...config, [key]: value });
@@ -43,15 +62,14 @@ export default function FloatingBackgroundPanel({
     setUploading(true);
     try {
       await saveBackgroundImage(file);
+      setHasCustomImage(true); // 標記有自定義圖片
       alert("背景圖片上傳成功！");
       // 通知父组件刷新圖片
       if (onImageUpload) {
         onImageUpload();
       }
     } catch (error) {
-      alert(
-        `上傳失敗：${error instanceof Error ? error.message : "未知錯誤"}`
-      );
+      alert(`上傳失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
     } finally {
       setUploading(false);
       // 清空 input 以允许重复上傳同一文件
@@ -69,15 +87,14 @@ export default function FloatingBackgroundPanel({
 
     try {
       await deleteBackgroundImage();
+      setHasCustomImage(false); // 標記沒有自定義圖片
       alert("恢復預設背景圖片");
       // 通知父组件刷新圖片
       if (onImageUpload) {
         onImageUpload();
       }
     } catch (error) {
-      alert(
-        `刪除失敗：${error instanceof Error ? error.message : "未知錯誤"}`
-      );
+      alert(`刪除失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
     }
   };
 
@@ -113,7 +130,6 @@ export default function FloatingBackgroundPanel({
             flex: 1,
           }}
         >
-          <span style={{ fontSize: "18px" }}>🎨</span>
           <span style={{ fontWeight: "600", fontSize: "14px" }}>背景設定</span>
         </div>
         <button
@@ -145,239 +161,312 @@ export default function FloatingBackgroundPanel({
       </div>
 
       {/* 控制面板 */}
-      <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* 圖片上傳区域 */}
-          <div style={{ marginBottom: "8px" }}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              style={{ display: "none" }}
-            />
-
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
+      <div
+        style={{
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+        }}
+      >
+        {/* 預設背景選擇 */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontSize: "12px",
+              fontWeight: "600",
+              color: hasCustomImage ? "#9ca3af" : "#374151",
+              marginBottom: "6px",
+            }}
+          >
+            選擇主題
+            {hasCustomImage && (
+              <span
                 style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  background: uploading ? "#9ca3af" : "#3b82f6",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: uploading ? "not-allowed" : "pointer",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!uploading) e.currentTarget.style.background = "#2563eb";
-                }}
-                onMouseLeave={(e) => {
-                  if (!uploading) e.currentTarget.style.background = "#3b82f6";
+                  marginLeft: "8px",
+                  fontSize: "11px",
+                  fontWeight: "500",
+                  color: "#10b981",
+                  background: "#d1fae5",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
                 }}
               >
-                {uploading ? "上傳中..." : "上傳圖片"}
-              </button>
+                使用中：自定義主題
+              </span>
+            )}
+          </label>
+          <select
+            value={selectedBackground}
+            onChange={(e) => onBackgroundChange(e.target.value)}
+            disabled={hasCustomImage}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              background: hasCustomImage ? "#f3f4f6" : "white",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: hasCustomImage ? "#9ca3af" : "#374151",
+              cursor: hasCustomImage ? "not-allowed" : "pointer",
+              outline: "none",
+              opacity: hasCustomImage ? 0.6 : 1,
+            }}
+          >
+            <option value="OfficeBG">派對主題佈景</option>
+            <option value="GachaBG">馬到成功-2026</option>
+          </select>
+        </div>
 
-              <button
-                onClick={handleDeleteImage}
-                disabled={uploading}
-                style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  background: uploading ? "#9ca3af" : "#ef4444",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: uploading ? "not-allowed" : "pointer",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!uploading) e.currentTarget.style.background = "#dc2626";
-                }}
-                onMouseLeave={(e) => {
-                  if (!uploading) e.currentTarget.style.background = "#ef4444";
-                }}
-              >
-                恢復預設
-              </button>
-            </div>
+        <div
+          style={{
+            borderTop: "1px solid #e5e7eb",
+            paddingTop: "12px",
+            marginTop: "4px",
+          }}
+        />
 
-            <p style={{
+        {/* 圖片上傳区域 */}
+        <div style={{ marginBottom: "8px" }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            style={{ display: "none" }}
+          />
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                flex: 1,
+                padding: "8px 12px",
+                background: uploading ? "#9ca3af" : "#3b82f6",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: uploading ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                fontWeight: "600",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (!uploading) e.currentTarget.style.background = "#2563eb";
+              }}
+              onMouseLeave={(e) => {
+                if (!uploading) e.currentTarget.style.background = "#3b82f6";
+              }}
+            >
+              {uploading ? "上傳中..." : "上傳圖片"}
+            </button>
+
+            <button
+              onClick={handleDeleteImage}
+              disabled={uploading}
+              style={{
+                flex: 1,
+                padding: "8px 12px",
+                background: uploading ? "#9ca3af" : "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: uploading ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                fontWeight: "600",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (!uploading) e.currentTarget.style.background = "#dc2626";
+              }}
+              onMouseLeave={(e) => {
+                if (!uploading) e.currentTarget.style.background = "#ef4444";
+              }}
+            >
+              恢復預設
+            </button>
+          </div>
+
+          <p
+            style={{
               fontSize: "11px",
               color: "#6b7280",
               marginTop: "6px",
-              lineHeight: "1.4"
-            }}>
-              支持 PNG、JPG、WebP 格式，最大 10MB
-            </p>
-          </div>
-
-          <div style={{
-            borderTop: "1px solid #e5e7eb",
-            paddingTop: "12px",
-            marginTop: "4px"
-          }} />
-
-          {/* Position X */}
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#374151",
-                marginBottom: "4px",
-              }}
-            >
-              水平 (X): <span style={{ color: "#3b82f6" }}>{config.positionX}</span>
-            </label>
-            <input
-              type="range"
-              min="-100"
-              max="100"
-              step="1"
-              value={config.positionX}
-              onChange={(e) =>
-                handleChange("positionX", parseFloat(e.target.value))
-              }
-              style={{
-                width: "100%",
-                height: "6px",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
-            />
-          </div>
-
-          {/* Position Y */}
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#374151",
-                marginBottom: "4px",
-              }}
-            >
-              垂直 (Y): <span style={{ color: "#3b82f6" }}>{config.positionY}</span>
-            </label>
-            <input
-              type="range"
-              min="-100"
-              max="100"
-              step="1"
-              value={config.positionY}
-              onChange={(e) =>
-                handleChange("positionY", parseFloat(e.target.value))
-              }
-              style={{
-                width: "100%",
-                height: "6px",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
-            />
-          </div>
-
-          {/* Position Z */}
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#374151",
-                marginBottom: "4px",
-              }}
-            >
-              深度 (Z): <span style={{ color: "#3b82f6" }}>{config.positionZ}</span>
-            </label>
-            <input
-              type="range"
-              min="-200"
-              max="0"
-              step="1"
-              value={config.positionZ}
-              onChange={(e) =>
-                handleChange("positionZ", parseFloat(e.target.value))
-              }
-              style={{
-                width: "100%",
-                height: "6px",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
-            />
-          </div>
-
-          {/* Scale */}
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#374151",
-                marginBottom: "4px",
-              }}
-            >
-              大小: <span style={{ color: "#3b82f6" }}>{config.scale}</span>
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="300"
-              step="5"
-              value={config.scale}
-              onChange={(e) => handleChange("scale", parseFloat(e.target.value))}
-              style={{
-                width: "100%",
-                height: "6px",
-                borderRadius: "3px",
-                cursor: "pointer",
-              }}
-            />
-          </div>
-
-          {/* Reset Button */}
-          <button
-            onClick={() =>
-              onChange({
-                positionX: 11,
-                positionY: -1,
-                positionZ: -67,
-                scale: 150,
-              })
-            }
-            style={{
-              marginTop: "8px",
-              padding: "8px 12px",
-              background: "#6b7280",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "12px",
-              fontWeight: "600",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#4b5563";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#6b7280";
+              lineHeight: "1.4",
             }}
           >
-            重置
-          </button>
+            支持 PNG、JPG、WebP 格式，最大 10MB
+          </p>
         </div>
+
+        <div
+          style={{
+            borderTop: "1px solid #e5e7eb",
+            paddingTop: "12px",
+            marginTop: "8px",
+          }}
+        />
+
+        {/* Position X */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontSize: "12px",
+              fontWeight: "600",
+              color: "#374151",
+              marginBottom: "4px",
+            }}
+          >
+            水平 (X):{" "}
+            <span style={{ color: "#3b82f6" }}>{config.positionX}</span>
+          </label>
+          <input
+            type="range"
+            min="-100"
+            max="100"
+            step="1"
+            value={config.positionX}
+            onChange={(e) =>
+              handleChange("positionX", parseFloat(e.target.value))
+            }
+            style={{
+              width: "100%",
+              height: "6px",
+              borderRadius: "3px",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
+        {/* Position Y */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontSize: "12px",
+              fontWeight: "600",
+              color: "#374151",
+              marginBottom: "4px",
+            }}
+          >
+            垂直 (Y):{" "}
+            <span style={{ color: "#3b82f6" }}>{config.positionY}</span>
+          </label>
+          <input
+            type="range"
+            min="-100"
+            max="100"
+            step="1"
+            value={config.positionY}
+            onChange={(e) =>
+              handleChange("positionY", parseFloat(e.target.value))
+            }
+            style={{
+              width: "100%",
+              height: "6px",
+              borderRadius: "3px",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
+        {/* Position Z */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontSize: "12px",
+              fontWeight: "600",
+              color: "#374151",
+              marginBottom: "4px",
+            }}
+          >
+            深度 (Z):{" "}
+            <span style={{ color: "#3b82f6" }}>{config.positionZ}</span>
+          </label>
+          <input
+            type="range"
+            min="-200"
+            max="0"
+            step="1"
+            value={config.positionZ}
+            onChange={(e) =>
+              handleChange("positionZ", parseFloat(e.target.value))
+            }
+            style={{
+              width: "100%",
+              height: "6px",
+              borderRadius: "3px",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
+        {/* Scale */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              fontSize: "12px",
+              fontWeight: "600",
+              color: "#374151",
+              marginBottom: "4px",
+            }}
+          >
+            大小: <span style={{ color: "#3b82f6" }}>{config.scale}</span>
+          </label>
+          <input
+            type="range"
+            min="50"
+            max="300"
+            step="5"
+            value={config.scale}
+            onChange={(e) => handleChange("scale", parseFloat(e.target.value))}
+            style={{
+              width: "100%",
+              height: "6px",
+              borderRadius: "3px",
+              cursor: "pointer",
+            }}
+          />
+        </div>
+
+        {/* Reset Button */}
+        <button
+          onClick={() =>
+            onChange({
+              positionX: 11,
+              positionY: -1,
+              positionZ: -67,
+              scale: 150,
+            })
+          }
+          style={{
+            marginTop: "8px",
+            padding: "8px 12px",
+            background: "#6b7280",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "12px",
+            fontWeight: "600",
+            transition: "background 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#4b5563";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#6b7280";
+          }}
+        >
+          重置
+        </button>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import Lottie from "lottie-react";
+import confettiAnimation from "@/../public/Confetti.json";
 
 interface WinnerInfo {
   name: string;
@@ -34,6 +36,15 @@ export default function WinnerModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={isSingleWinner ? "sm:max-w-[500px] p-8" : "sm:max-w-[700px] p-8 max-h-[80vh] overflow-y-auto"}>
+        {/* Lottie Confetti Animation Overlay */}
+        <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+          <Lottie
+            animationData={confettiAnimation}
+            loop={true}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
+
         <DialogHeader>
           <DialogTitle className="text-center text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             🎉 恭喜中獎！🎉

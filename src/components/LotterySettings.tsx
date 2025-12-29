@@ -22,13 +22,13 @@ export default function LotterySettings() {
     const result = drawSingleWinner({ skipWinners });
 
     if (result.error) {
-      setTestResult(`❌ ${result.error}`);
+      setTestResult(`失敗：${result.error}`);
     } else if (result.winner) {
       setTestResult(
-        `✅ 抽到：${result.winner.name} (ID: ${result.winner.id})`
+        `抽到：${result.winner.name} (ID: ${result.winner.id})`
       );
     } else {
-      setTestResult("❌ 抽獎失敗");
+      setTestResult("抽獎失敗");
     }
 
     // 3秒後清除測試結果
@@ -39,9 +39,9 @@ export default function LotterySettings() {
     const validation = validateLottery(count, { skipWinners });
 
     if (validation.valid) {
-      alert(`✅ 驗證通過！\n可用參與者：${validation.availableCount} 人`);
+      alert(`驗證通過！\n可用參與者：${validation.availableCount} 人`);
     } else {
-      alert(`❌ 驗證失敗\n${validation.error}`);
+      alert(`驗證失敗\n${validation.error}`);
     }
   };
 
@@ -131,7 +131,7 @@ export default function LotterySettings() {
             disabled={statistics.totalParticipants === 0}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            🎲 測試抽獎 (單人)
+            測試抽獎 (單人)
           </button>
 
           <button
@@ -160,8 +160,8 @@ export default function LotterySettings() {
 
       {/* 獎項抽獎驗證 */}
       {prizes.length > 0 && (
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
-          <h4 className="font-semibold text-gray-800">依獎項驗證</h4>
+        <div className="p-4 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 border border-amber-300 rounded-lg space-y-4">
+          <h4 className="font-semibold text-amber-900">依獎項驗證</h4>
 
           <div className="space-y-2">
             {prizes
@@ -177,27 +177,27 @@ export default function LotterySettings() {
                     key={prize.id}
                     className={`p-3 rounded border ${
                       isValid
-                        ? "bg-green-50 border-green-200"
+                        ? "bg-gradient-to-br from-yellow-100 to-amber-100 border-amber-300"
                         : "bg-red-50 border-red-200"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-medium text-gray-800">
+                        <span className="font-medium text-amber-900">
                           {prize.name}
                         </span>
-                        <span className="ml-2 text-sm text-gray-600">
+                        <span className="ml-2 text-sm text-amber-800">
                           (需要 {prize.quantity} 人)
                         </span>
                       </div>
                       <div className="text-right">
                         {isValid ? (
-                          <span className="text-green-600 text-sm">
-                            ✓ 可抽獎
+                          <span className="text-amber-900 text-sm">
+                            可抽獎
                           </span>
                         ) : (
                           <span className="text-red-600 text-sm">
-                            ✗ {validation.error}
+                            {validation.error}
                           </span>
                         )}
                       </div>
