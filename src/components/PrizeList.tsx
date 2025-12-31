@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useAnimationStore, type Prize } from "@/stores/useAnimationStore";
+import { useLotteryDataStore, type Prize } from "@/stores/useLotteryDataStore";
 
 export default function PrizeList() {
-  const prizes = useAnimationStore((state) => state.prizes);
-  const addPrize = useAnimationStore((state) => state.addPrize);
-  const updatePrize = useAnimationStore((state) => state.updatePrize);
-  const removePrize = useAnimationStore((state) => state.removePrize);
-  const clearPrizes = useAnimationStore((state) => state.clearPrizes);
-  const participants = useAnimationStore((state) => state.participants);
+  const prizes = useLotteryDataStore((state) => state.prizes);
+  const addPrize = useLotteryDataStore((state) => state.addPrize);
+  const updatePrize = useLotteryDataStore((state) => state.updatePrize);
+  const removePrize = useLotteryDataStore((state) => state.removePrize);
+  const clearPrizes = useLotteryDataStore((state) => state.clearPrizes);
+  const participants = useLotteryDataStore((state) => state.participants);
+  const winnerRecords = useLotteryDataStore((state) => state.winnerRecords);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,8 +25,7 @@ export default function PrizeList() {
     name: "",
     level: 1,
     quantity: 1,
-    description: "",
-    allowedGroup: "",
+    group: "", // 必填分組
   });
 
   const resetForm = () => {
@@ -33,8 +33,7 @@ export default function PrizeList() {
       name: "",
       level: 1,
       quantity: 1,
-      description: "",
-      allowedGroup: "",
+      group: "",
     });
     setEditingId(null);
     setShowAddForm(false);
@@ -51,14 +50,38 @@ export default function PrizeList() {
       return;
     }
 
+    if (!formData.group.trim()) {
+      alert("請選擇分組");
+      return;
+    }
+
     if (editingId) {
+      // 檢查是否有人已經中獎
+      const currentPrize = prizes.find((p) => p.id === editingId);
+      if (currentPrize) {
+        const winnersCount = winnerRecords.filter((record) => {
+          // 如果記錄有 prizeId，只通過 ID 匹配（嚴格匹配）
+          if (record.prizeId) {
+            return record.prizeId === editingId;
+          }
+          // 舊記錄（沒有 prizeId），通過名稱匹配（向後兼容）
+          return record.prize === currentPrize.name;
+        }).length;
+
+        if (formData.quantity < winnersCount) {
+          alert(
+            `無法設定此數量！\n\n此獎項已有 ${winnersCount} 人中獎，數量不能少於 ${winnersCount} 個。\n\n如需減少數量，請先到「紀錄」分頁清除部分中獎紀錄。`
+          );
+          return;
+        }
+      }
+
       // 更新現有獎項
       updatePrize(editingId, {
         name: formData.name.trim(),
         level: formData.level,
         quantity: formData.quantity,
-        description: formData.description.trim() || undefined,
-        allowedGroup: formData.allowedGroup.trim() || undefined,
+        group: formData.group.trim(),
       });
     } else {
       // 新增獎項
@@ -67,8 +90,7 @@ export default function PrizeList() {
         name: formData.name.trim(),
         level: formData.level,
         quantity: formData.quantity,
-        description: formData.description.trim() || undefined,
-        allowedGroup: formData.allowedGroup.trim() || undefined,
+        group: formData.group.trim(),
       });
     }
 
@@ -80,8 +102,7 @@ export default function PrizeList() {
       name: prize.name,
       level: prize.level,
       quantity: prize.quantity,
-      description: prize.description || "",
-      allowedGroup: prize.allowedGroup || "",
+      group: prize.group,
     });
     setEditingId(prize.id);
     setShowAddForm(false); // 編輯時不顯示頂部表單
@@ -110,8 +131,10 @@ export default function PrizeList() {
   // 計算總中獎人數
   const totalWinners = prizes.reduce((sum, prize) => sum + prize.quantity, 0);
 
-  // 按等級排序獎項
-  const sortedPrizes = [...prizes].sort((a, b) => a.level - b.level);
+  // 按等級排序獎項（過濾已刪除的）
+  const sortedPrizes = [...prizes]
+    .filter((p) => !p.isDeleted)
+    .sort((a, b) => a.level - b.level);
 
   return (
     <div className="w-full space-y-4">
@@ -215,16 +238,17 @@ export default function PrizeList() {
 
           <div>
             <label className="block text-sm font-medium text-amber-900 mb-1">
-              限定分組
+              所屬分組 <span className="text-red-500">*</span>
             </label>
             {availableGroups.length > 0 ? (
               <select
-                value={formData.allowedGroup}
+                value={formData.group}
                 onChange={(e) =>
-                  setFormData({ ...formData, allowedGroup: e.target.value })
+                  setFormData({ ...formData, group: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
+                <option value="">請選擇分組</option>
                 {availableGroups.map((group) => (
                   <option key={group} value={group}>
                     {group}
@@ -234,32 +258,17 @@ export default function PrizeList() {
             ) : (
               <input
                 type="text"
-                value={formData.allowedGroup}
+                value={formData.group}
                 onChange={(e) =>
-                  setFormData({ ...formData, allowedGroup: e.target.value })
+                  setFormData({ ...formData, group: e.target.value })
                 }
-                placeholder="選填，例如：VIP組（需先上傳分組參與者）"
+                placeholder="請輸入分組名稱（需先上傳分組參與者）"
                 className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             )}
             <div className="text-xs text-amber-700 mt-1">
-              選填，限定只有特定分組的參與者可以抽此獎項
+              必填，此獎項只有指定分組的參與者可以抽取
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-amber-900 mb-1">
-              獎項描述
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="選填，例如：市值 NT$45,000"
-              rows={2}
-              className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
           </div>
 
           <div className="flex gap-2">
@@ -346,17 +355,17 @@ export default function PrizeList() {
 
                   <div>
                     <label className="block text-sm font-medium text-amber-900 mb-1">
-                      限定分組
+                      所屬分組 <span className="text-red-500">*</span>
                     </label>
                     {availableGroups.length > 0 ? (
                       <select
-                        value={formData.allowedGroup}
+                        value={formData.group}
                         onChange={(e) =>
-                          setFormData({ ...formData, allowedGroup: e.target.value })
+                          setFormData({ ...formData, group: e.target.value })
                         }
                         className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
-                        <option value="">不限定（所有分組）</option>
+                        <option value="">請選擇分組</option>
                         {availableGroups.map((group) => (
                           <option key={group} value={group}>
                             {group}
@@ -366,32 +375,17 @@ export default function PrizeList() {
                     ) : (
                       <input
                         type="text"
-                        value={formData.allowedGroup}
+                        value={formData.group}
                         onChange={(e) =>
-                          setFormData({ ...formData, allowedGroup: e.target.value })
+                          setFormData({ ...formData, group: e.target.value })
                         }
-                        placeholder="選填，例如：VIP組（需先上傳分組參與者）"
+                        placeholder="請輸入分組名稱（需先上傳分組參與者）"
                         className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     )}
                     <div className="text-xs text-amber-700 mt-1">
-                      選填，限定只有特定分組的參與者可以抽此獎項
+                      必填，此獎項只有指定分組的參與者可以抽取
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-amber-900 mb-1">
-                      獎項描述
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      placeholder="選填，例如：市值 NT$45,000"
-                      rows={2}
-                      className="w-full px-3 py-2 border border-amber-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
                   </div>
 
                   <div className="flex gap-2">
@@ -418,11 +412,9 @@ export default function PrizeList() {
                         <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-xs font-medium rounded border border-amber-400">
                           等級 {prize.level}
                         </span>
-                        {prize.allowedGroup && (
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-xs font-medium rounded border border-amber-400">
-                            限定：{prize.allowedGroup}
-                          </span>
-                        )}
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded border border-blue-200">
+                          {prize.group}
+                        </span>
                         <h4 className="font-semibold text-amber-900">
                           {prize.name}
                         </h4>
@@ -431,11 +423,6 @@ export default function PrizeList() {
                         <span className="font-medium">中獎人數：</span>
                         {prize.quantity} 人
                       </div>
-                      {prize.description && (
-                        <div className="mt-1 text-sm text-amber-700">
-                          {prize.description}
-                        </div>
-                      )}
                     </div>
                     <div className="flex gap-2 ml-4">
                       <button

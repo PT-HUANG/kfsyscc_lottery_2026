@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useAnimationStore, type Prize } from "@/stores/useAnimationStore";
+import { useLotteryDataStore, type Prize } from "@/stores/useLotteryDataStore";
 
 interface PrizeUploadProps {
   onUploadComplete?: (count: number) => void;
@@ -13,9 +13,9 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<string>(""); // 選擇的分組（必填）
 
-  const setPrizes = useAnimationStore((state) => state.setPrizes);
-  const prizes = useAnimationStore((state) => state.prizes);
-  const participants = useAnimationStore((state) => state.participants);
+  const setPrizes = useLotteryDataStore((state) => state.setPrizes);
+  const prizes = useLotteryDataStore((state) => state.prizes);
+  const participants = useLotteryDataStore((state) => state.participants);
 
   // 獲取所有可用的分組（去重）
   const availableGroups = Array.from(
@@ -23,7 +23,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
   ).sort();
 
   const parseTextFile = useCallback(
-    async (file: File, allowedGroup: string): Promise<Prize[]> => {
+    async (file: File, group: string): Promise<Prize[]> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -76,8 +76,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
                 name,
                 level: index + 1, // 按照檔案順序自動生成等級
                 quantity,
-                description: undefined,
-                allowedGroup, // 設定限定分組
+                group, // 所屬分組（必填）
               };
             });
 

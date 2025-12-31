@@ -2,47 +2,66 @@
 
 import { useState } from "react";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
-import { useAnimationStore } from "@/stores/useAnimationStore";
+import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 
 export default function LotterySettings() {
   const {
     statistics,
     validateLottery,
     drawSingleWinner,
+    drawMultipleWinners,
     prizes,
   } = useLotteryLogic();
 
   // 使用全域狀態，而不是本地狀態
-  const skipWinners = useAnimationStore((state) => state.skipWinners);
-  const setSkipWinners = useAnimationStore((state) => state.setSkipWinners);
+  const skipWinners = useLotteryDataStore((state) => state.skipWinners);
+  const setSkipWinners = useLotteryDataStore((state) => state.setSkipWinners);
 
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [testMode, setTestMode] = useState<"single" | "multiple">("single"); // 測試模式
+  const [testCount, setTestCount] = useState<number>(1); // 測試人數（多人模式）
 
   const handleTestDraw = () => {
-    const result = drawSingleWinner({ skipWinners });
+    if (testMode === "single") {
+      // 單人測試
+      const result = drawSingleWinner({ skipWinners });
 
-    if (result.error) {
-      setTestResult(`失敗：${result.error}`);
-    } else if (result.winner) {
-      setTestResult(
-        `抽到：${result.winner.name} (ID: ${result.winner.id})`
-      );
+      if (result.error) {
+        setTestResult(`❌ 失敗：${result.error}`);
+      } else if (result.winner) {
+        setTestResult(
+          `✅ 抽到：${result.winner.name} (ID: ${result.winner.id})`
+        );
+      } else {
+        setTestResult("❌ 抽獎失敗");
+      }
     } else {
-      setTestResult("抽獎失敗");
+      // 多人測試 - 實際執行抽獎並顯示員工資訊
+      const result = drawMultipleWinners(testCount, { skipWinners });
+
+      if (result.error) {
+        setTestResult(`❌ 失敗：${result.error}`);
+      } else if (result.winners && result.winners.length > 0) {
+        const winnersList = result.winners
+          .map(
+            (winner, index) =>
+              `${index + 1}. ${winner.name}${
+                winner.employeeId
+                  ? ` (員編：${winner.employeeId})`
+                  : ` (ID: ${winner.id})`
+              }`
+          )
+          .join("\n");
+        setTestResult(
+          `✅ 成功抽取 ${result.winners.length} 人：\n\n${winnersList}`
+        );
+      } else {
+        setTestResult("❌ 抽獎失敗");
+      }
     }
 
-    // 3秒後清除測試結果
-    setTimeout(() => setTestResult(null), 3000);
-  };
-
-  const handleValidate = (count: number) => {
-    const validation = validateLottery(count, { skipWinners });
-
-    if (validation.valid) {
-      alert(`驗證通過！\n可用參與者：${validation.availableCount} 人`);
-    } else {
-      alert(`驗證失敗\n${validation.error}`);
-    }
+    // 5秒後清除測試結果（多人模式資訊較多，需要更長時間閱讀）
+    setTimeout(() => setTestResult(null), 5000);
   };
 
   return (
@@ -85,9 +104,7 @@ export default function LotterySettings() {
         {/* 防重複中獎開關 */}
         <div className="flex items-center justify-between p-3 bg-white rounded border border-gray-200">
           <div>
-            <div className="font-medium text-gray-800">
-              防重複中獎
-            </div>
+            <div className="font-medium text-gray-800">防重複中獎</div>
             <div className="text-sm text-gray-500">
               啟用後，已中獎者不會再被抽中
             </div>
@@ -109,12 +126,12 @@ export default function LotterySettings() {
         </div>
 
         {/* 狀態提示 */}
-        {statistics.allDrawn && (
+        {statistics.allDrawn && skipWinners && (
           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
             <div className="flex items-start gap-2">
               <span className="text-yellow-500">⚠️</span>
               <div className="text-sm text-yellow-800">
-                所有參與者都已中獎！請匯入新的參與者或清除中獎紀錄後再繼續抽獎。
+                所有參與者都已中獎！請匯入新的參與者或關閉防重複中獎按鈕
               </div>
             </div>
           </div>
@@ -122,38 +139,106 @@ export default function LotterySettings() {
       </div>
 
       {/* 測試抽獎 */}
-      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
-        <h4 className="font-semibold text-gray-800">測試抽獎功能</h4>
+      <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg space-y-4">
+        <h4 className="font-bold text-blue-900 flex items-center gap-2">
+          抽獎功能測試
+        </h4>
 
-        <div className="flex gap-2">
-          <button
-            onClick={handleTestDraw}
-            disabled={statistics.totalParticipants === 0}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            測試抽獎 (單人)
-          </button>
+        {/* 測試執行區 */}
+        <div className="bg-white p-4 rounded-lg border border-blue-200">
+          {/* 模式選擇 */}
+          <div className="flex gap-3 pb-3 border-b border-gray-200">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="testMode"
+                value="single"
+                checked={testMode === "single"}
+                onChange={(e) =>
+                  setTestMode(e.target.value as "single" | "multiple")
+                }
+                className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                單人（隨機抽出一位中獎者）
+              </span>
+            </label>
 
-          <button
-            onClick={() => handleValidate(1)}
-            disabled={statistics.totalParticipants === 0}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            ✓ 驗證 1 人
-          </button>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="testMode"
+                value="multiple"
+                checked={testMode === "multiple"}
+                onChange={(e) =>
+                  setTestMode(e.target.value as "single" | "multiple")
+                }
+                className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                多人（一次抽出多位中獎者）
+              </span>
+            </label>
+          </div>
 
-          <button
-            onClick={() => handleValidate(10)}
-            disabled={statistics.totalParticipants === 0}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            ✓ 驗證 10 人
-          </button>
+          {/* 執行內容 */}
+          <div className="pt-3 space-y-4">
+            {testMode === "single" ? (
+              // 單人模式
+              <>
+                <p className="text-sm text-gray-600">
+                  快速測試抽取 1 位參與者，確認抽獎功能正常運作
+                </p>
+                <button
+                  onClick={handleTestDraw}
+                  disabled={statistics.totalParticipants === 0}
+                  className="w-[200px] px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
+                >
+                  開始測試抽獎
+                </button>
+              </>
+            ) : (
+              // 多人模式
+              <>
+                <p className="text-sm text-gray-600">
+                  測試抽取多位參與者，實際執行抽獎並顯示員工資訊
+                </p>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    測試人數：
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={testCount}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      setTestCount(Math.max(1, Math.min(100, value)));
+                    }}
+                    disabled={statistics.totalParticipants === 0}
+                    className="w-13 pl-3 p-1 border-2 border-gray-300 rounded-lg text-center font-semibold focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                  <span className="text-sm text-gray-600">人（1-100）</span>
+                </div>
+                <button
+                  onClick={handleTestDraw}
+                  disabled={statistics.totalParticipants === 0}
+                  className="w-[200px] px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
+                >
+                  開始測試抽獎
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
+        {/* 測試結果 */}
         {testResult && (
-          <div className="p-3 bg-white border border-gray-200 rounded">
-            <div className="text-sm font-medium">{testResult}</div>
+          <div className="p-3 bg-white border-2 border-blue-300 rounded-lg shadow-sm">
+            <div className="text-sm font-medium text-gray-800 whitespace-pre-line">
+              {testResult}
+            </div>
           </div>
         )}
       </div>
@@ -192,9 +277,7 @@ export default function LotterySettings() {
                       </div>
                       <div className="text-right">
                         {isValid ? (
-                          <span className="text-amber-900 text-sm">
-                            可抽獎
-                          </span>
+                          <span className="text-amber-900 text-sm">可抽獎</span>
                         ) : (
                           <span className="text-red-600 text-sm">
                             {validation.error}

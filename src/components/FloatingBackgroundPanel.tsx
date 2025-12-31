@@ -6,31 +6,21 @@ import {
   deleteBackgroundImage,
   getBackgroundImage,
 } from "@/utils/imageStorage";
+import { useBackgroundStore } from "@/stores/useBackgroundStore";
+import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 
-export interface BackgroundConfig {
-  positionX: number;
-  positionY: number;
-  positionZ: number;
-  scale: number;
-}
+export default function FloatingBackgroundPanel() {
+  // Get data from stores
+  const {
+    config,
+    updateConfig,
+    resetConfig,
+    selectedBackground,
+    setSelectedBackground,
+    refreshImage,
+  } = useBackgroundStore();
 
-interface FloatingBackgroundPanelProps {
-  config: BackgroundConfig;
-  onChange: (config: BackgroundConfig) => void;
-  onClose: () => void;
-  onImageUpload?: () => void; // 上傳圖片后的回调
-  selectedBackground: string; // 選中的預設背景
-  onBackgroundChange: (background: string) => void; // 背景切換回调
-}
-
-export default function FloatingBackgroundPanel({
-  config,
-  onChange,
-  onClose,
-  onImageUpload,
-  selectedBackground,
-  onBackgroundChange,
-}: FloatingBackgroundPanelProps) {
+  const { closeBgPanel } = useLotteryUIStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [hasCustomImage, setHasCustomImage] = useState(false);
@@ -42,14 +32,15 @@ export default function FloatingBackgroundPanel({
         const customImage = await getBackgroundImage();
         setHasCustomImage(!!customImage);
       } catch (error) {
+        console.error(error);
         setHasCustomImage(false);
       }
     }
     checkCustomImage();
   }, []);
 
-  const handleChange = (key: keyof BackgroundConfig, value: number) => {
-    onChange({ ...config, [key]: value });
+  const handleChange = (key: keyof typeof config, value: number) => {
+    updateConfig({ [key]: value });
   };
 
   // 处理文件上傳
@@ -64,10 +55,8 @@ export default function FloatingBackgroundPanel({
       await saveBackgroundImage(file);
       setHasCustomImage(true); // 標記有自定義圖片
       alert("背景圖片上傳成功！");
-      // 通知父组件刷新圖片
-      if (onImageUpload) {
-        onImageUpload();
-      }
+      // 刷新圖片
+      refreshImage();
     } catch (error) {
       alert(`上傳失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
     } finally {
@@ -89,177 +78,82 @@ export default function FloatingBackgroundPanel({
       await deleteBackgroundImage();
       setHasCustomImage(false); // 標記沒有自定義圖片
       alert("恢復預設背景圖片");
-      // 通知父组件刷新圖片
-      if (onImageUpload) {
-        onImageUpload();
-      }
+      // 刷新圖片
+      refreshImage();
     } catch (error) {
       alert(`刪除失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
     }
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "20px",
-        left: "20px",
-        zIndex: 50,
-        background: "rgba(255, 255, 255, 0.95)",
-        borderRadius: "12px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-        transition: "all 0.3s ease",
-        maxWidth: "320px",
-      }}
-    >
-      {/* 標題列 */}
-      <div
-        style={{
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderBottom: "1px solid #e5e7eb",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            flex: 1,
-          }}
-        >
-          <span style={{ fontWeight: "600", fontSize: "14px" }}>背景設定</span>
+    <div className="flex flex-col bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-xl shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 h-full">
+      {/* 標題列 - 固定不滾動 */}
+      <div className="px-4 py-3 flex items-center justify-between border-b-2 border-amber-300 shrink-0">
+        <div className="flex items-center gap-2 flex-1">
+          <span className="font-bold text-sm text-amber-900">背景設定</span>
         </div>
         <button
-          onClick={onClose}
-          style={{
-            marginLeft: "8px",
-            background: "none",
-            border: "none",
-            fontSize: "20px",
-            cursor: "pointer",
-            padding: "0",
-            width: "24px",
-            height: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6b7280",
-            transition: "color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = "#374151";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = "#6b7280";
-          }}
+          onClick={closeBgPanel}
+          className="ml-2 bg-transparent border-none text-xl cursor-pointer p-0 w-6 h-6 flex items-center justify-center text-amber-700 hover:text-amber-900 transition-colors"
         >
           ×
         </button>
       </div>
 
-      {/* 控制面板 */}
-      <div
-        style={{
-          padding: "16px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}
-      >
+      {/* 控制面板 - 可滾動 */}
+      <div className="p-4 flex flex-col gap-1 overflow-y-auto grow min-h-0">
         {/* 預設背景選擇 */}
         <div>
           <label
-            style={{
-              display: "block",
-              fontSize: "12px",
-              fontWeight: "600",
-              color: hasCustomImage ? "#9ca3af" : "#374151",
-              marginBottom: "6px",
-            }}
+            className={`block text-xs font-semibold mb-1.5 ${
+              hasCustomImage ? "text-gray-400" : "text-amber-900"
+            }`}
           >
             選擇主題
             {hasCustomImage && (
-              <span
-                style={{
-                  marginLeft: "8px",
-                  fontSize: "11px",
-                  fontWeight: "500",
-                  color: "#10b981",
-                  background: "#d1fae5",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                }}
-              >
+              <span className="ml-2 text-[11px] font-medium text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
                 使用中：自定義主題
               </span>
             )}
           </label>
           <select
             value={selectedBackground}
-            onChange={(e) => onBackgroundChange(e.target.value)}
+            onChange={(e) => setSelectedBackground(e.target.value)}
             disabled={hasCustomImage}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: hasCustomImage ? "#f3f4f6" : "white",
-              border: "1px solid #d1d5db",
-              borderRadius: "6px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: hasCustomImage ? "#9ca3af" : "#374151",
-              cursor: hasCustomImage ? "not-allowed" : "pointer",
-              outline: "none",
-              opacity: hasCustomImage ? 0.6 : 1,
-            }}
+            className={`w-full px-3 py-2 ${
+              hasCustomImage ? "bg-gray-100" : "bg-white"
+            } border-2 border-amber-300 rounded-lg text-xs font-medium ${
+              hasCustomImage ? "text-gray-400 cursor-not-allowed" : "text-amber-900 cursor-pointer"
+            } outline-none focus:ring-2 focus:ring-amber-400 transition-all ${
+              hasCustomImage ? "opacity-60" : ""
+            }`}
           >
             <option value="OfficeBG">派對主題佈景</option>
             <option value="GachaBG">馬到成功-2026</option>
           </select>
         </div>
 
-        <div
-          style={{
-            borderTop: "1px solid #e5e7eb",
-            paddingTop: "12px",
-            marginTop: "4px",
-          }}
-        />
+        <div className="border-t border-amber-300 pt-3 mt-1" />
 
         {/* 圖片上傳区域 */}
-        <div style={{ marginBottom: "8px" }}>
+        <div className="mb-2">
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleFileUpload}
-            style={{ display: "none" }}
+            className="hidden"
           />
 
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              style={{
-                flex: 1,
-                padding: "8px 12px",
-                background: uploading ? "#9ca3af" : "#3b82f6",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: uploading ? "not-allowed" : "pointer",
-                fontSize: "12px",
-                fontWeight: "600",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                if (!uploading) e.currentTarget.style.background = "#2563eb";
-              }}
-              onMouseLeave={(e) => {
-                if (!uploading) e.currentTarget.style.background = "#3b82f6";
-              }}
+              className={`flex-1 px-3 py-2 ${
+                uploading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+              } text-white border-none rounded-lg ${
+                uploading ? "cursor-not-allowed" : "cursor-pointer"
+              } text-xs font-semibold transition-colors`}
             >
               {uploading ? "上傳中..." : "上傳圖片"}
             </button>
@@ -267,62 +161,27 @@ export default function FloatingBackgroundPanel({
             <button
               onClick={handleDeleteImage}
               disabled={uploading}
-              style={{
-                flex: 1,
-                padding: "8px 12px",
-                background: uploading ? "#9ca3af" : "#ef4444",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: uploading ? "not-allowed" : "pointer",
-                fontSize: "12px",
-                fontWeight: "600",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                if (!uploading) e.currentTarget.style.background = "#dc2626";
-              }}
-              onMouseLeave={(e) => {
-                if (!uploading) e.currentTarget.style.background = "#ef4444";
-              }}
+              className={`flex-1 px-3 py-2 ${
+                uploading ? "bg-gray-400" : "bg-red-500 hover:bg-red-600"
+              } text-white border-none rounded-lg ${
+                uploading ? "cursor-not-allowed" : "cursor-pointer"
+              } text-xs font-semibold transition-colors`}
             >
               恢復預設
             </button>
           </div>
 
-          <p
-            style={{
-              fontSize: "11px",
-              color: "#6b7280",
-              marginTop: "6px",
-              lineHeight: "1.4",
-            }}
-          >
+          <p className="text-[11px] text-amber-700 mt-1.5 leading-snug">
             支持 PNG、JPG、WebP 格式，最大 10MB
           </p>
         </div>
 
-        <div
-          style={{
-            borderTop: "1px solid #e5e7eb",
-            paddingTop: "12px",
-            marginTop: "8px",
-          }}
-        />
+        <div className="border-t border-amber-300 pt-3 mt-2" />
 
         {/* Position X */}
         <div>
-          <label
-            style={{
-              display: "block",
-              fontSize: "12px",
-              fontWeight: "600",
-              color: "#374151",
-              marginBottom: "4px",
-            }}
-          >
-            水平 (X):{" "}
-            <span style={{ color: "#3b82f6" }}>{config.positionX}</span>
+          <label className="block text-xs font-semibold text-amber-900 mb-1">
+            水平 (X): <span className="text-blue-600">{config.positionX}</span>
           </label>
           <input
             type="range"
@@ -333,28 +192,14 @@ export default function FloatingBackgroundPanel({
             onChange={(e) =>
               handleChange("positionX", parseFloat(e.target.value))
             }
-            style={{
-              width: "100%",
-              height: "6px",
-              borderRadius: "3px",
-              cursor: "pointer",
-            }}
+            className="w-full h-1.5 rounded cursor-pointer accent-blue-500"
           />
         </div>
 
         {/* Position Y */}
         <div>
-          <label
-            style={{
-              display: "block",
-              fontSize: "12px",
-              fontWeight: "600",
-              color: "#374151",
-              marginBottom: "4px",
-            }}
-          >
-            垂直 (Y):{" "}
-            <span style={{ color: "#3b82f6" }}>{config.positionY}</span>
+          <label className="block text-xs font-semibold text-amber-900 mb-1">
+            垂直 (Y): <span className="text-blue-600">{config.positionY}</span>
           </label>
           <input
             type="range"
@@ -365,28 +210,14 @@ export default function FloatingBackgroundPanel({
             onChange={(e) =>
               handleChange("positionY", parseFloat(e.target.value))
             }
-            style={{
-              width: "100%",
-              height: "6px",
-              borderRadius: "3px",
-              cursor: "pointer",
-            }}
+            className="w-full h-1.5 rounded cursor-pointer accent-blue-500"
           />
         </div>
 
         {/* Position Z */}
         <div>
-          <label
-            style={{
-              display: "block",
-              fontSize: "12px",
-              fontWeight: "600",
-              color: "#374151",
-              marginBottom: "4px",
-            }}
-          >
-            深度 (Z):{" "}
-            <span style={{ color: "#3b82f6" }}>{config.positionZ}</span>
+          <label className="block text-xs font-semibold text-amber-900 mb-1">
+            深度 (Z): <span className="text-blue-600">{config.positionZ}</span>
           </label>
           <input
             type="range"
@@ -397,27 +228,14 @@ export default function FloatingBackgroundPanel({
             onChange={(e) =>
               handleChange("positionZ", parseFloat(e.target.value))
             }
-            style={{
-              width: "100%",
-              height: "6px",
-              borderRadius: "3px",
-              cursor: "pointer",
-            }}
+            className="w-full h-1.5 rounded cursor-pointer accent-blue-500"
           />
         </div>
 
         {/* Scale */}
         <div>
-          <label
-            style={{
-              display: "block",
-              fontSize: "12px",
-              fontWeight: "600",
-              color: "#374151",
-              marginBottom: "4px",
-            }}
-          >
-            大小: <span style={{ color: "#3b82f6" }}>{config.scale}</span>
+          <label className="block text-xs font-semibold text-amber-900 mb-1">
+            大小: <span className="text-blue-600">{config.scale}</span>
           </label>
           <input
             type="range"
@@ -426,43 +244,14 @@ export default function FloatingBackgroundPanel({
             step="5"
             value={config.scale}
             onChange={(e) => handleChange("scale", parseFloat(e.target.value))}
-            style={{
-              width: "100%",
-              height: "6px",
-              borderRadius: "3px",
-              cursor: "pointer",
-            }}
+            className="w-full h-1.5 rounded cursor-pointer accent-blue-500"
           />
         </div>
 
         {/* Reset Button */}
         <button
-          onClick={() =>
-            onChange({
-              positionX: 11,
-              positionY: -1,
-              positionZ: -67,
-              scale: 150,
-            })
-          }
-          style={{
-            marginTop: "8px",
-            padding: "8px 12px",
-            background: "#6b7280",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "12px",
-            fontWeight: "600",
-            transition: "background 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#4b5563";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#6b7280";
-          }}
+          onClick={resetConfig}
+          className="mt-2 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white border-none rounded-lg cursor-pointer text-xs font-semibold transition-colors"
         >
           重置
         </button>

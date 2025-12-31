@@ -37,7 +37,7 @@ export default function ManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-amber-900">
             抽獎管理後台
@@ -48,7 +48,7 @@ export default function ManagementModal({
         </DialogHeader>
 
         {/* 分頁導航 */}
-        <div className="flex gap-0.5 border-b-2 border-amber-500">
+        <div className="flex border-b-2 border-amber-500">
           {tabs.map((tab) => (
             <button
               key={tab.id}

@@ -8,7 +8,8 @@ export interface WinnerRecord {
   employeeId?: string; // 員工編號
   department?: string; // 部門
   group: string; // 分組（必填）
-  prize: string;
+  prizeId?: string; // 獎項 ID（新版使用，優先）
+  prize: string; // 獎項名稱（舊版兼容/備份顯示）
   color: string;
   timestamp: number;
 }
@@ -26,37 +27,43 @@ export interface Prize {
   name: string;
   level: number;
   quantity: number;
-  description?: string;
-  allowedGroup?: string; // 限定分組（僅該分組可抽，未設定則所有人可抽）
+  group: string; // 所屬分組（必填）
+  isDeleted?: boolean; // 軟刪除標記（不會真正刪除數據）
 }
 
-interface AnimationStore {
-  // 動畫狀態（不持久化）
+interface LotteryDataStore {
+  // Animation states (not persisted)
   isAnimating: boolean;
   setIsAnimating: (value: boolean) => void;
   toggleAnimation: () => void;
 
-  // 中獎彈窗狀態（不持久化）
+  // Winner announcement state (not persisted)
+  isAnnouncingResults: boolean;
+  setIsAnnouncingResults: (value: boolean) => void;
+
+  // Winner modal state (not persisted)
   showWinnerModal: boolean;
   setShowWinnerModal: (value: boolean) => void;
 
-  // 抽獎設定（持久化）
+  // Lottery settings (persisted)
   skipWinners: boolean; // 是否跳過已中獎者（防重複中獎）
   setSkipWinners: (value: boolean) => void;
+  skipAnimation: boolean; // 是否跳過抽獎動畫（直接顯示結果）
+  setSkipAnimation: (value: boolean) => void;
 
-  // 中獎紀錄（持久化）
+  // Winner records (persisted)
   winnerRecords: WinnerRecord[];
   addWinnerRecord: (record: Omit<WinnerRecord, "timestamp" | "recordId">) => void;
   clearWinnerRecords: () => void;
 
-  // 參與者名單（持久化）
+  // Participants (persisted)
   participants: Participant[];
   setParticipants: (participants: Participant[]) => void;
   addParticipant: (participant: Participant) => void;
   removeParticipant: (id: string) => void;
   clearParticipants: () => void;
 
-  // 獎項設定（持久化）
+  // Prizes (persisted)
   prizes: Prize[];
   setPrizes: (prizes: Prize[]) => void;
   addPrize: (prize: Prize) => void;
@@ -65,39 +72,46 @@ interface AnimationStore {
   clearPrizes: () => void;
 }
 
-export const useAnimationStore = create<AnimationStore>()(
+export const useLotteryDataStore = create<LotteryDataStore>()(
   persist(
     (set) => ({
-      // 動畫狀態
+      // Animation states
       isAnimating: false,
       setIsAnimating: (value) => set({ isAnimating: value }),
       toggleAnimation: () =>
         set((state) => ({ isAnimating: !state.isAnimating })),
 
-      // 中獎彈窗狀態
+      // Winner announcement state
+      isAnnouncingResults: false,
+      setIsAnnouncingResults: (value) => set({ isAnnouncingResults: value }),
+
+      // Winner modal state
       showWinnerModal: false,
       setShowWinnerModal: (value) => set({ showWinnerModal: value }),
 
-      // 抽獎設定
+      // Lottery settings
       skipWinners: true, // 預設啟用防重複中獎
       setSkipWinners: (value) => set({ skipWinners: value }),
+      skipAnimation: false, // 預設顯示抽獎動畫
+      setSkipAnimation: (value) => set({ skipAnimation: value }),
 
-      // 中獎紀錄
+      // Winner records
       winnerRecords: [],
       addWinnerRecord: (record) =>
         set((state) => ({
           winnerRecords: [
-            ...state.winnerRecords,
+            // 🎯 新記錄插入到陣列開頭（從上方顯示）
             {
               ...record,
               recordId: `${record.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
               timestamp: Date.now()
             },
+            ...state.winnerRecords,
           ],
         })),
       clearWinnerRecords: () => set({ winnerRecords: [] }),
 
-      // 參與者名單
+      // Participants
       participants: [],
       setParticipants: (participants) => set({ participants }),
       addParticipant: (participant) =>
@@ -110,7 +124,7 @@ export const useAnimationStore = create<AnimationStore>()(
         })),
       clearParticipants: () => set({ participants: [] }),
 
-      // 獎項設定
+      // Prizes
       prizes: [],
       setPrizes: (prizes) => set({ prizes }),
       addPrize: (prize) =>
@@ -125,16 +139,19 @@ export const useAnimationStore = create<AnimationStore>()(
         })),
       removePrize: (id) =>
         set((state) => ({
-          prizes: state.prizes.filter((p) => p.id !== id),
+          prizes: state.prizes.map((p) =>
+            p.id === id ? { ...p, isDeleted: true } : p
+          ),
         })),
       clearPrizes: () => set({ prizes: [] }),
     }),
     {
-      name: "kfsyscc-lottery-storage", // localStorage key
+      name: "kfsyscc-lottery-storage", // localStorage key (保持與舊版本相容)
       storage: createJSONStorage(() => localStorage),
-      // 只持久化需要保存的狀態，動畫狀態不持久化
+      // Only persist data states, not animation/modal states
       partialize: (state) => ({
         skipWinners: state.skipWinners,
+        skipAnimation: state.skipAnimation,
         winnerRecords: state.winnerRecords,
         participants: state.participants,
         prizes: state.prizes,

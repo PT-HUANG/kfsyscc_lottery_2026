@@ -1,12 +1,22 @@
 "use client";
 
-import { useAnimationStore } from "@/stores/useAnimationStore";
+import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 
 export default function WinnerRecordsList() {
-  const winnerRecords = useAnimationStore((state) => state.winnerRecords);
-  const clearWinnerRecords = useAnimationStore(
+  const winnerRecords = useLotteryDataStore((state) => state.winnerRecords);
+  const prizes = useLotteryDataStore((state) => state.prizes);
+  const clearWinnerRecords = useLotteryDataStore(
     (state) => state.clearWinnerRecords
   );
+
+  // 獲取獎品名稱（優先通過 prizeId 查找，如果找不到則使用備份名稱）
+  const getPrizeName = (record: typeof winnerRecords[0]) => {
+    if (record.prizeId) {
+      const prize = prizes.find((p) => p.id === record.prizeId);
+      if (prize) return prize.name;
+    }
+    return record.prize; // 備份顯示
+  };
 
   const handleClearAll = () => {
     if (winnerRecords.length === 0) return;
@@ -32,7 +42,7 @@ export default function WinnerRecordsList() {
       index + 1,
       record.name,
       record.employeeId || "",
-      record.prize,
+      getPrizeName(record),
     ]);
 
     const csvContent = [
@@ -133,7 +143,7 @@ export default function WinnerRecordsList() {
                       {record.employeeId || "-"}
                     </td>
                     <td className="px-4 py-2 text-sm text-amber-900">
-                      {record.prize}
+                      {getPrizeName(record)}
                     </td>
                   </tr>
                 ))}

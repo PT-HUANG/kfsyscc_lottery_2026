@@ -1,5 +1,8 @@
 import { useCallback, useMemo } from "react";
-import { useAnimationStore, type Participant } from "@/stores/useAnimationStore";
+import {
+  useLotteryDataStore,
+  type Participant,
+} from "@/stores/useLotteryDataStore";
 
 export interface LotteryOptions {
   skipWinners?: boolean; // 是否跳過已中獎者
@@ -17,9 +20,9 @@ export interface LotteryResult {
  * 提供防重複中獎、參與者過濾等功能
  */
 export function useLotteryLogic() {
-  const participants = useAnimationStore((state) => state.participants);
-  const winnerRecords = useAnimationStore((state) => state.winnerRecords);
-  const prizes = useAnimationStore((state) => state.prizes);
+  const participants = useLotteryDataStore((state) => state.participants);
+  const winnerRecords = useLotteryDataStore((state) => state.winnerRecords);
+  const prizes = useLotteryDataStore((state) => state.prizes);
 
   /**
    * 獲取已中獎者的參與者 ID 列表
@@ -37,16 +40,12 @@ export function useLotteryLogic() {
 
       // 如果啟用跳過已中獎者，過濾掉已中獎的參與者
       if (options.skipWinners) {
-        available = available.filter(
-          (p) => !winnerParticipantIds.has(p.id)
-        );
+        available = available.filter((p) => !winnerParticipantIds.has(p.id));
       }
 
       // 如果選擇了特定分組，只保留該分組的參與者
       if (options.selectedGroup) {
-        available = available.filter(
-          (p) => p.group === options.selectedGroup
-        );
+        available = available.filter((p) => p.group === options.selectedGroup);
       }
 
       return available;
@@ -58,7 +57,10 @@ export function useLotteryLogic() {
    * 驗證是否有足夠的參與者可抽獎
    */
   const validateLottery = useCallback(
-    (requiredCount: number, options: LotteryOptions = {}): {
+    (
+      requiredCount: number,
+      options: LotteryOptions = {}
+    ): {
       valid: boolean;
       availableCount: number;
       error?: string;
@@ -76,7 +78,7 @@ export function useLotteryLogic() {
 
       if (availableCount === 0) {
         const errorMsg = options.selectedGroup
-          ? `分組「${options.selectedGroup}」的參與者都已中獎或沒有此分組的參與者`
+          ? `分組「${options.selectedGroup}」的參與者都已中獎\n如果要繼續抽獎請關閉後台「 防重複中獎 」按鈕`
           : "所有參與者都已中獎，無可用名單";
         return {
           valid: false,
@@ -132,7 +134,10 @@ export function useLotteryLogic() {
    * 執行抽獎（抽取多位中獎者）
    */
   const drawMultipleWinners = useCallback(
-    (count: number, options: LotteryOptions = {}): {
+    (
+      count: number,
+      options: LotteryOptions = {}
+    ): {
       winners: Participant[];
       error?: string;
     } => {
@@ -167,7 +172,10 @@ export function useLotteryLogic() {
    * 根據獎項抽獎
    */
   const drawByPrize = useCallback(
-    (prizeId: string, options: Omit<LotteryOptions, "prizeId"> = {}): {
+    (
+      prizeId: string,
+      options: Omit<LotteryOptions, "prizeId"> = {}
+    ): {
       winners: Participant[];
       prizeName: string;
       error?: string;
@@ -182,17 +190,17 @@ export function useLotteryLogic() {
         };
       }
 
-      // 如果獎品有設定限定分組，自動設定 selectedGroup
+      // 使用獎品的分組設定（group 現在是必填）
       const finalOptions = { ...options, prizeId };
-      if (prize.allowedGroup) {
-        finalOptions.selectedGroup = prize.allowedGroup;
+      if (prize.group) {
+        finalOptions.selectedGroup = prize.group;
       }
 
       const result = drawMultipleWinners(prize.quantity, finalOptions);
 
       // 如果因為分組限制導致參與者不足，提供更詳細的錯誤訊息
-      if (result.error && prize.allowedGroup) {
-        result.error = `此獎項限定「${prize.allowedGroup}」分組。${result.error}`;
+      if (result.error && prize.group) {
+        result.error = `此獎項限定「${prize.group}」分組。${result.error}`;
       }
 
       return {

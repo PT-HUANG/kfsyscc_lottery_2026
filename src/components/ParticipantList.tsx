@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useAnimationStore } from "@/stores/useAnimationStore";
+import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 
 export default function ParticipantList() {
-  const participants = useAnimationStore((state) => state.participants);
-  const removeParticipant = useAnimationStore((state) => state.removeParticipant);
-  const clearParticipants = useAnimationStore((state) => state.clearParticipants);
-  const addParticipant = useAnimationStore((state) => state.addParticipant);
+  const participants = useLotteryDataStore((state) => state.participants);
+  const removeParticipant = useLotteryDataStore((state) => state.removeParticipant);
+  const clearParticipants = useLotteryDataStore((state) => state.clearParticipants);
+  const addParticipant = useLotteryDataStore((state) => state.addParticipant);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");

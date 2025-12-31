@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useAnimationStore, type Participant } from "@/stores/useAnimationStore";
+import { useLotteryDataStore, type Participant } from "@/stores/useLotteryDataStore";
 
 interface ParticipantUploadProps {
   onUploadComplete?: (count: number) => void;
@@ -13,8 +13,8 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
   const [isProcessing, setIsProcessing] = useState(false);
   const [groupName, setGroupName] = useState<string>(""); // 分組名稱
 
-  const setParticipants = useAnimationStore((state) => state.setParticipants);
-  const participants = useAnimationStore((state) => state.participants);
+  const setParticipants = useLotteryDataStore((state) => state.setParticipants);
+  const participants = useLotteryDataStore((state) => state.participants);
 
   const parseTextFile = useCallback(
     async (file: File, group: string): Promise<Participant[]> => {
