@@ -6,7 +6,9 @@ import { useMemo } from "react";
 export default function WinnerRecordBoard() {
   const winnerRecords = useLotteryDataStore((state) => state.winnerRecords);
   const prizes = useLotteryDataStore((state) => state.prizes);
-  const currentDrawSessionId = useLotteryDataStore((state) => state.currentDrawSessionId);
+  const currentDrawSessionId = useLotteryDataStore(
+    (state) => state.currentDrawSessionId
+  );
 
   // 🎯 只顯示本輪中獎者（根據 drawSessionId 過濾）
   const latestRoundRecords = useMemo(() => {
@@ -103,12 +105,16 @@ export default function WinnerRecordBoard() {
         {/* 標題區域 - 重新設計 */}
         <div className="mb-5 pb-4 border-b border-orange-300/50 bg-gradient-to-b from-orange-100/40 to-transparent -mx-5 -mt-5 px-5 pt-5 rounded-t-xl">
           {/* 次要標題 */}
-          <div className="text-xl font-bold text-orange-700 m-1 pb-2">本輪中獎</div>
+          <div className="text-xl font-bold text-orange-700 m-1 pb-2">
+            本輪中獎
+          </div>
 
           {/* 獎項名稱 - 主視覺焦點 */}
-          <h2 className="text-2xl font-black text-white mb-4 tracking-tight px-6 py-2 rounded-lg inline-block shine-effect shadow-lg">
-            {currentPrize}
-          </h2>
+          <div className="flex justify-center">
+            <h2 className="w-[80%] text-center text-2xl font-black text-white mb-4 tracking-tight px-6 py-3 rounded-lg inline-block shine-effect shadow-lg">
+              {currentPrize}
+            </h2>
+          </div>
 
           {/* 輔助資訊列 - 統一收納 */}
           <div className="flex flex-wrap items-center gap-3 text-lg">
@@ -122,7 +128,9 @@ export default function WinnerRecordBoard() {
             )}
             <div className="inline-flex items-center gap-1.5 text-orange-700">
               <span className="font-medium">共</span>
-              <span className="font-bold text-red-700">{latestRoundRecords.length}</span>
+              <span className="font-bold text-red-700">
+                {latestRoundRecords.length}
+              </span>
               <span className="font-medium">位中獎</span>
             </div>
           </div>
@@ -136,41 +144,44 @@ export default function WinnerRecordBoard() {
               <div
                 key={record.recordId}
                 className={`border-2 border-orange-300 bg-gradient-to-r from-orange-50 via-yellow-50 to-amber-50 backdrop-blur-sm rounded-lg p-3 transition-all duration-300 hover:shadow-md hover:scale-[1.01] shadow-sm ${
-                  isNew ? 'animate-entry' : ''
+                  isNew ? "animate-entry" : ""
                 }`}
               >
-            <div className="flex items-center gap-2">
-              {/* 序號 - 細線條圓圈 */}
-              <div className="flex-shrink-0">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-sm">
-                    {String(latestRoundRecords.length - index).padStart(2, '0')}
-                  </span>
-                </div>
-              </div>
+                <div className="flex items-center gap-2">
+                  {/* 序號 - 細線條圓圈 */}
+                  <div className="flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
+                      <span className="text-white font-bold text-sm">
+                        {String(latestRoundRecords.length - index).padStart(
+                          2,
+                          "0"
+                        )}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* 中獎者資訊 */}
-              <div className="flex-1 min-w-0">
-                {/* 姓名 */}
-                <div className="text-base font-bold text-red-900 mb-1 truncate">
-                  {record.name}
-                </div>
+                  {/* 中獎者資訊 */}
+                  <div className="flex-1 min-w-0">
+                    {/* 姓名 */}
+                    <div className="text-base font-bold text-red-900 mb-1 truncate">
+                      {record.name}
+                    </div>
 
-                {/* 標籤 - 低飽和度設計 */}
-                <div className="flex flex-wrap gap-1.5 text-xs">
-                  {record.employeeId && (
-                    <span className="px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
-                      員編：{record.employeeId}
-                    </span>
-                  )}
-                  {record.department && (
-                    <span className="px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
-                      {record.department}
-                    </span>
-                  )}
+                    {/* 標籤 - 低飽和度設計 */}
+                    <div className="flex flex-wrap gap-1.5 text-xs">
+                      {record.employeeId && (
+                        <span className="px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
+                          員編：{record.employeeId}
+                        </span>
+                      )}
+                      {record.department && (
+                        <span className="px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
+                          {record.department}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
               </div>
             );
           })}
