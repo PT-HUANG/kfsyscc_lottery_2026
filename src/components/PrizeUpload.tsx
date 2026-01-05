@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useLotteryDataStore, type Prize } from "@/stores/useLotteryDataStore";
 
 interface PrizeUploadProps {
@@ -21,6 +21,13 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
   const availableGroups = Array.from(
     new Set(participants.map((p) => p.group))
   ).sort();
+
+  // 智能預選：只有一個分組時自動選擇
+  useEffect(() => {
+    if (availableGroups.length === 1 && !selectedGroup) {
+      setSelectedGroup(availableGroups[0]);
+    }
+  }, [availableGroups, selectedGroup]);
 
   const parseTextFile = useCallback(
     async (file: File, group: string): Promise<Prize[]> => {
@@ -202,6 +209,11 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
         <div className="space-y-2">
           <label htmlFor="prizeGroup" className="block text-sm font-medium text-amber-900">
             選擇分組 <span className="text-red-500">*</span>
+            {availableGroups.length === 1 && (
+              <span className="ml-2 text-xs font-normal text-green-600">
+                （已自動選擇唯一分組）
+              </span>
+            )}
           </label>
           <select
             id="prizeGroup"
@@ -220,6 +232,11 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
           </select>
           <p className="text-xs text-amber-700">
             上傳的獎項將<span className="text-red-600 font-medium">限定</span>此分組參與者才能抽取。
+            {availableGroups.length === 1 && (
+              <span className="block mt-1 text-green-600">
+                ✓ 系統已自動選擇唯一可用分組
+              </span>
+            )}
           </p>
         </div>
       )}
