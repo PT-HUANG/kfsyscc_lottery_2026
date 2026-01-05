@@ -12,6 +12,7 @@ export interface WinnerRecord {
   prize: string; // 獎項名稱（舊版兼容/備份顯示）
   color: string;
   timestamp: number;
+  drawSessionId?: string; // 抽獎輪次 ID（用於區分不同輪的抽獎）
 }
 
 export interface Participant {
@@ -45,6 +46,10 @@ interface LotteryDataStore {
   showWinnerModal: boolean;
   setShowWinnerModal: (value: boolean) => void;
 
+  // Draw session state (not persisted)
+  currentDrawSessionId: string;
+  startNewDrawSession: () => void;
+
   // Lottery settings (persisted)
   skipWinners: boolean; // 是否跳過已中獎者（防重複中獎）
   setSkipWinners: (value: boolean) => void;
@@ -53,7 +58,7 @@ interface LotteryDataStore {
 
   // Winner records (persisted)
   winnerRecords: WinnerRecord[];
-  addWinnerRecord: (record: Omit<WinnerRecord, "timestamp" | "recordId">) => void;
+  addWinnerRecord: (record: Omit<WinnerRecord, "timestamp" | "recordId" | "drawSessionId">) => void;
   clearWinnerRecords: () => void;
 
   // Participants (persisted)
@@ -89,6 +94,12 @@ export const useLotteryDataStore = create<LotteryDataStore>()(
       showWinnerModal: false,
       setShowWinnerModal: (value) => set({ showWinnerModal: value }),
 
+      // Draw session state
+      currentDrawSessionId: "",
+      startNewDrawSession: () => set({
+        currentDrawSessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+      }),
+
       // Lottery settings
       skipWinners: true, // 預設啟用防重複中獎
       setSkipWinners: (value) => set({ skipWinners: value }),
@@ -104,7 +115,8 @@ export const useLotteryDataStore = create<LotteryDataStore>()(
             {
               ...record,
               recordId: `${record.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              drawSessionId: state.currentDrawSessionId, // 記錄當前抽獎輪次 ID
             },
             ...state.winnerRecords,
           ],

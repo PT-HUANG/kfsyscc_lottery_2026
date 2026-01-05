@@ -131,7 +131,7 @@ export default function LotteryControlPanel() {
     setIsAnimating,
   ]);
 
-  // 🎯 當分組改變時，自動選擇第一個可用的獎項
+  // 🎯 當分組改變或獎品抽完時，自動選擇下一個可用的獎項
   useEffect(() => {
     if (!selectedGroup) {
       // 如果沒有選擇分組，清空獎項選擇
@@ -144,10 +144,15 @@ export default function LotteryControlPanel() {
       (p) => p.id === selectedPrizeId
     );
 
-    if (!isCurrentPrizeValid || !selectedPrizeId) {
-      // 如果當前獎項無效，或沒有選擇，則自動選擇第一個有剩餘名額的獎項
+    // 檢查當前選擇的獎項是否還有剩餘名額
+    const currentPrizeRemaining = selectedPrizeId
+      ? getPrizeRemainingSlots(selectedPrizeId)
+      : 0;
+
+    // 如果當前獎項無效、沒有選擇、或已抽完，則自動選擇下一個有剩餘名額的獎項
+    if (!isCurrentPrizeValid || !selectedPrizeId || currentPrizeRemaining === 0) {
       const sortedPrizes = [...filteredPrizes].sort(
-        (a, b) => a.level - b.level
+        (a, b) => b.level - a.level
       );
       const firstAvailable = sortedPrizes.find((prize) => {
         const remaining = getPrizeRemainingSlots(prize.id);
@@ -219,7 +224,7 @@ export default function LotteryControlPanel() {
                 {selectedGroup &&
                   filteredPrizes.length > 0 &&
                   [...filteredPrizes]
-                    .sort((a, b) => a.level - b.level)
+                    .sort((a, b) => b.level - a.level)
                     .map((prize) => {
                       const remaining = getPrizeRemainingSlots(prize.id);
                       return (

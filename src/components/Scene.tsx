@@ -129,12 +129,12 @@ function GachaScene({
   const isAnimating = useLotteryDataStore((state) => state.isAnimating);
   const setIsAnimating = useLotteryDataStore((state) => state.setIsAnimating);
   const addWinnerRecord = useLotteryDataStore((state) => state.addWinnerRecord);
-  const clearWinnerRecords = useLotteryDataStore((state) => state.clearWinnerRecords); // 🎯 清除中獎紀錄
   const setIsAnnouncingResults = useLotteryDataStore((state) => state.setIsAnnouncingResults); // 🎯 設定公布結果狀態
   const showWinnerModal = useLotteryDataStore((state) => state.showWinnerModal);
   const setShowWinnerModal = useLotteryDataStore((state) => state.setShowWinnerModal);
   const skipWinners = useLotteryDataStore((state) => state.skipWinners); // 讀取全域設定
   const skipAnimation = useLotteryDataStore((state) => state.skipAnimation); // 是否跳過動畫
+  const startNewDrawSession = useLotteryDataStore((state) => state.startNewDrawSession); // 開始新的抽獎輪次
 
   // 抽獎邏輯
   const { drawMultipleWinners, prizes } = useLotteryLogic();
@@ -282,8 +282,9 @@ function GachaScene({
     if (isAnimating && !animationInitialized.current) {
       animationInitialized.current = true;
 
-      // 🎯 清除上一輪的中獎紀錄
-      clearWinnerRecords();
+      // 🎯 開始新的抽獎輪次
+      startNewDrawSession();
+
       // 🎯 重置公布結果狀態
       setIsAnnouncingResults(false);
 
@@ -298,7 +299,7 @@ function GachaScene({
         shouldStartAnimation.current = true;
       }
     }
-  }, [isAnimating, skipAnimation, handleDirectLottery, clearWinnerRecords, setIsAnnouncingResults]);
+  }, [isAnimating, skipAnimation, handleDirectLottery, setIsAnnouncingResults, startNewDrawSession]);
 
   useFrame(({ clock }, delta) => {
     const time = clock.getElapsedTime();

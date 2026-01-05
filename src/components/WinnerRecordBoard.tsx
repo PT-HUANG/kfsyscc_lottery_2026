@@ -6,11 +6,15 @@ import { useMemo } from "react";
 export default function WinnerRecordBoard() {
   const winnerRecords = useLotteryDataStore((state) => state.winnerRecords);
   const prizes = useLotteryDataStore((state) => state.prizes);
+  const currentDrawSessionId = useLotteryDataStore((state) => state.currentDrawSessionId);
 
-  // 顯示本輪所有中獎者（因為每輪開始時會清除舊紀錄）
+  // 🎯 只顯示本輪中獎者（根據 drawSessionId 過濾）
   const latestRoundRecords = useMemo(() => {
-    return winnerRecords; // 直接顯示所有紀錄
-  }, [winnerRecords]);
+    if (!currentDrawSessionId) return [];
+    return winnerRecords.filter(
+      (record) => record.drawSessionId === currentDrawSessionId
+    );
+  }, [winnerRecords, currentDrawSessionId]);
 
   // 🎯 取得最新時間戳，判斷記錄是否為新加入的
   const latestTimestamp = useMemo(() => {
