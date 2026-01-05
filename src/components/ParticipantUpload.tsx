@@ -1,13 +1,18 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useLotteryDataStore, type Participant } from "@/stores/useLotteryDataStore";
+import {
+  useLotteryDataStore,
+  type Participant,
+} from "@/stores/useLotteryDataStore";
 
 interface ParticipantUploadProps {
   onUploadComplete?: (count: number) => void;
 }
 
-export default function ParticipantUpload({ onUploadComplete }: ParticipantUploadProps) {
+export default function ParticipantUpload({
+  onUploadComplete,
+}: ParticipantUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -53,9 +58,8 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
               const department = parts[2] || undefined;
 
               // 如果有超過3個欄位，將第3個之後的都當作部門名稱的一部分
-              const fullDepartment = parts.length > 3
-                ? parts.slice(2).join(" ")
-                : department;
+              const fullDepartment =
+                parts.length > 3 ? parts.slice(2).join(" ") : department;
 
               return {
                 id: `participant-${Date.now()}-${index}`,
@@ -154,6 +158,10 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
+      if (!groupName) {
+        alert("請先輸入組別名稱再進行上傳")
+        return
+      }
       setIsDragging(false);
 
       const file = e.dataTransfer.files?.[0];
@@ -168,7 +176,10 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
     <div className="w-full space-y-4">
       {/* 分組名稱輸入框 */}
       <div className="space-y-2">
-        <label htmlFor="groupName" className="block text-sm font-medium text-amber-900">
+        <label
+          htmlFor="groupName"
+          className="block text-sm font-medium text-amber-900"
+        >
           分組名稱 <span className="text-red-500">*</span>
         </label>
         <input
@@ -223,8 +234,12 @@ export default function ParticipantUpload({ onUploadComplete }: ParticipantUploa
             <div className="font-mono bg-amber-100 px-2 py-1 rounded inline-block">
               姓名 員工編號 部門
             </div>
-            <div className="text-amber-700">（用空格或 Tab 分隔，員工編號和部門可省略）</div>
-            <div className="text-amber-900 font-medium mt-2">支援多次上傳不同分組的名單</div>
+            <div className="text-amber-700">
+              （用空格或 Tab 分隔，員工編號和部門可省略）
+            </div>
+            <div className="text-amber-900 font-medium mt-2">
+              支援多次上傳不同分組的名單
+            </div>
           </div>
         </div>
       </div>

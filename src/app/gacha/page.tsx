@@ -21,7 +21,7 @@ export default function GachaPage() {
   } = useLotteryUIStore();
 
   // Data Store
-  const { prizes, isAnimating, showWinnerModal } = useLotteryDataStore();
+  const { isAnimating, showWinnerModal } = useLotteryDataStore();
 
   const handleSceneReady = useCallback(() => {
     setSceneReady(true);
@@ -44,13 +44,19 @@ export default function GachaPage() {
         <div className="fixed top-3 right-3 z-10 w-[52vw] sm:w-[28vw] max-w-[350px] flex flex-col gap-2 sm:gap-3">
           {/* 抽獎控制面板 - 佔據主要空間 */}
           <div
-            className={`${showBgPanel ? "flex-[65]" : "flex-none"} min-h-0 overflow-y-auto custom-scrollbar`}
+            className={`${
+              showBgPanel ? "flex-[65]" : "flex-none"
+            } min-h-0 overflow-y-auto custom-scrollbar`}
           >
             <LotteryControlPanel />
           </div>
 
           {/* 背景設定面板 - 佔據次要空間 */}
-          <div className={`flex-[35] transition-opacity min-h-0 overflow-y-auto custom-scrollbar ${showBgPanel ? "opacity-100": "opacity-0"}`}>
+          <div
+            className={`flex-[35] transition-opacity min-h-0 overflow-y-auto custom-scrollbar ${
+              showBgPanel ? "opacity-100" : "opacity-0"
+            }`}
+          >
             <FloatingBackgroundPanel />
           </div>
         </div>

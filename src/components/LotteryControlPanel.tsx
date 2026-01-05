@@ -5,7 +5,6 @@ import { useLotterySelectionStore } from "@/stores/useLotterySelectionStore";
 import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
-import { div } from "three/tsl";
 
 export default function LotteryControlPanel() {
   // Get data from stores

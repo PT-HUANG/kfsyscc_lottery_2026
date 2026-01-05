@@ -441,21 +441,23 @@ function GachaScene({
                     });
                     currentIndex++;
                   } else {
-                    // 所有中獎者都已新增，清理剩餘狀態
+                    // 所有中獎者都已新增，清理剩餘狀態並彈出 Modal
                     if (winnerSequenceInterval.current) {
                       clearInterval(winnerSequenceInterval.current);
                       winnerSequenceInterval.current = null;
                     }
-                    setCurrentWinners([]);
                     // 🎯 公布結果結束，啟用開始抽獎按鈕
                     setIsAnnouncingResults(false);
+                    // 🎯 彈出 Modal 顯示所有中獎者
+                    setShowWinnerModal(true);
                   }
                 }, 1000);
               } else {
-                // 只有一位中獎者，直接清理
-                setCurrentWinners([]);
+                // 只有一位中獎者，直接彈出 Modal
                 // 🎯 公布結果結束，啟用開始抽獎按鈕
                 setIsAnnouncingResults(false);
+                // 🎯 彈出 Modal 顯示所有中獎者
+                setShowWinnerModal(true);
               }
             } else {
               // 沒有中獎者的情況

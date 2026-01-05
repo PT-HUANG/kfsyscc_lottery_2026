@@ -111,7 +111,9 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
       try {
         // 檢查是否有參與者清單
         if (participants.length === 0) {
-          throw new Error("請先上傳參與者名單！\n必須先有參與者清單才能上傳獎項。");
+          throw new Error(
+            "請先上傳參與者名單！\n必須先有參與者清單才能上傳獎項。"
+          );
         }
 
         // 驗證分組名稱（必填）
@@ -151,7 +153,14 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
         setIsProcessing(false);
       }
     },
-    [parseTextFile, setPrizes, onUploadComplete, participants.length, selectedGroup, prizes]
+    [
+      parseTextFile,
+      setPrizes,
+      onUploadComplete,
+      participants.length,
+      selectedGroup,
+      prizes,
+    ]
   );
 
   const handleInputChange = useCallback(
@@ -180,6 +189,10 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
+      if (participants.length === 0) {
+        alert("請先上傳參與者名單！\n必須先有參與者清單才能上傳獎項。");
+        return;
+      }
       setIsDragging(false);
 
       const file = e.dataTransfer.files?.[0];
@@ -207,7 +220,10 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
       {/* 分組選擇器 */}
       {availableGroups.length > 0 && (
         <div className="space-y-2">
-          <label htmlFor="prizeGroup" className="block text-sm font-medium text-amber-900">
+          <label
+            htmlFor="prizeGroup"
+            className="block text-sm font-medium text-amber-900"
+          >
             選擇分組 <span className="text-red-500">*</span>
           </label>
           <select
@@ -226,7 +242,8 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
             ))}
           </select>
           <p className="text-xs text-amber-700">
-            上傳的獎項將<span className="text-red-600 font-medium">限定</span>此分組參與者才能抽取。
+            上傳的獎項將<span className="text-red-600 font-medium">限定</span>
+            此分組參與者才能抽取。
           </p>
         </div>
       )}
@@ -252,7 +269,9 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
           type="file"
           accept=".txt"
           onChange={handleInputChange}
-          disabled={isProcessing || participants.length === 0 || !selectedGroup.trim()}
+          disabled={
+            isProcessing || participants.length === 0 || !selectedGroup.trim()
+          }
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
           title={
             participants.length === 0
@@ -278,7 +297,9 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
             <div className="text-amber-700">
               （用空格或 Tab 分隔，等級按檔案順序自動生成）
             </div>
-            <div className="text-amber-900 font-medium mt-2">支援多次上傳不同分組的獎項</div>
+            <div className="text-amber-900 font-medium mt-2">
+              支援多次上傳不同分組的獎項
+            </div>
           </div>
         </div>
       </div>
