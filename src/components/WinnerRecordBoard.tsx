@@ -101,32 +101,32 @@ export default function WinnerRecordBoard() {
         }
       `}</style>
 
-      <div className="max-h-[97vh] overflow-y-auto bg-yellow-50 rounded-xl p-5 shadow-[0_8px_30px_rgba(230,57,70,0.25)] backdrop-blur-sm border-2 border-amber-400">
+      <div className="max-h-[93vh] overflow-y-auto custom-scrollbar bg-yellow-50 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-5 shadow-[0_8px_30px_rgba(230,57,70,0.25)] backdrop-blur-sm border-2 border-amber-400">
         {/* 標題區域 - 重新設計 */}
-        <div className="mb-5 pb-4 border-b border-orange-300/50 bg-gradient-to-b from-orange-100/40 to-transparent -mx-5 -mt-5 px-5 pt-5 rounded-t-xl">
+        <div className="mb-3 sm:mb-4 lg:mb-5 pb-3 sm:pb-4 border-b border-orange-300/50 bg-gradient-to-b from-orange-100/40 to-transparent -mx-3 sm:-mx-4 lg:-mx-5 -mt-3 sm:-mt-4 lg:-mt-5 px-3 sm:px-4 lg:px-5 pt-3 sm:pt-4 lg:pt-5 rounded-t-lg sm:rounded-t-xl">
           {/* 次要標題 */}
-          <div className="text-xl font-bold text-orange-700 m-1 pb-2">
+          <div className="text-base sm:text-lg lg:text-xl font-bold text-orange-700 m-1 pb-1.5 sm:pb-2">
             本輪中獎
           </div>
 
           {/* 獎項名稱 - 主視覺焦點 */}
           <div className="flex justify-center">
-            <h2 className="w-[80%] text-center text-2xl font-black text-white mb-4 tracking-tight px-6 py-3 rounded-lg inline-block shine-effect shadow-lg">
+            <h2 className="w-[90%] sm:w-[85%] xl:w-[90%] text-center text-lg sm:text-xl lg:text-2xl font-black text-white mb-3 sm:mb-4 tracking-tight px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg inline-block shine-effect shadow-lg">
               {currentPrize}
             </h2>
           </div>
 
           {/* 輔助資訊列 - 統一收納 */}
-          <div className="flex flex-wrap items-center gap-3 text-lg">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 lg:gap-3 text-sm sm:text-base lg:text-lg">
             {currentGroup && (
-              <div className="inline-flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2">
                 <span className="text-orange-700 font-medium">組別</span>
-                <div className="px-4 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 text-base text-amber-900 font-semibold rounded border border-amber-300 shadow-sm">
+                <div className="px-2.5 sm:px-3 lg:px-4 py-0.5 sm:py-1 bg-gradient-to-r from-amber-100 to-yellow-100 text-xs sm:text-sm lg:text-base text-amber-900 font-semibold rounded border border-amber-300 shadow-sm">
                   {currentGroup}
                 </div>
               </div>
             )}
-            <div className="inline-flex items-center gap-1.5 text-orange-700">
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 text-orange-700">
               <span className="font-medium">共</span>
               <span className="font-bold text-red-700">
                 {latestRoundRecords.length}
@@ -137,21 +137,21 @@ export default function WinnerRecordBoard() {
         </div>
 
         {/* 記錄列表 - 去邊框化設計 */}
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2 sm:gap-2.5">
           {latestRoundRecords.map((record, index) => {
             const isNew = isRecordNew(record.timestamp);
             return (
               <div
                 key={record.recordId}
-                className={`border-2 border-orange-300 bg-gradient-to-r from-orange-50 via-yellow-50 to-amber-50 backdrop-blur-sm rounded-lg p-3 transition-all duration-300 hover:shadow-md hover:scale-[1.01] shadow-sm ${
+                className={`border-2 border-orange-300 bg-gradient-to-r from-orange-50 via-yellow-50 to-amber-50 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 transition-all duration-300 hover:shadow-md hover:scale-[1.01] shadow-sm ${
                   isNew ? "animate-entry" : ""
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3">
                   {/* 序號 - 細線條圓圈 */}
                   <div className="flex-shrink-0">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
-                      <span className="text-white font-bold text-sm">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
+                      <span className="text-white font-bold text-xs sm:text-sm">
                         {String(latestRoundRecords.length - index).padStart(
                           2,
                           "0"
@@ -161,21 +161,21 @@ export default function WinnerRecordBoard() {
                   </div>
 
                   {/* 中獎者資訊 */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 flex flex-col gap-1 sm:gap-1.5">
                     {/* 姓名 */}
-                    <div className="text-base font-bold text-red-900 mb-1 truncate">
+                    <div className="text-sm sm:text-base lg:text-lg font-bold text-red-900 truncate">
                       {record.name}
                     </div>
 
                     {/* 標籤 - 低飽和度設計 */}
-                    <div className="flex flex-wrap gap-1.5 text-xs">
+                    <div className="flex flex-wrap gap-1 sm:gap-1.5 text-xs lg:text-base">
                       {record.employeeId && (
-                        <span className="px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
-                          員編：{record.employeeId}
+                        <span className="px-1.5 sm:px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
+                          {record.employeeId}
                         </span>
                       )}
                       {record.department && (
-                        <span className="px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
+                        <span className="px-1.5 sm:px-2 py-0.5 bg-yellow-100 text-amber-800 rounded font-medium border border-yellow-300">
                           {record.department}
                         </span>
                       )}
@@ -186,9 +186,6 @@ export default function WinnerRecordBoard() {
             );
           })}
         </div>
-
-        {/* 底部淡出效果提示 */}
-        <div className="h-4 bg-gradient-to-t from-orange-50 to-transparent -mx-5 -mb-5 mt-2 rounded-b-xl pointer-events-none" />
       </div>
     </>
   );

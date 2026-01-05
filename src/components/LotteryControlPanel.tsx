@@ -5,6 +5,7 @@ import { useLotterySelectionStore } from "@/stores/useLotterySelectionStore";
 import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
+import { div } from "three/tsl";
 
 export default function LotteryControlPanel() {
   // Get data from stores
@@ -150,7 +151,11 @@ export default function LotteryControlPanel() {
       : 0;
 
     // 如果當前獎項無效、沒有選擇、或已抽完，則自動選擇下一個有剩餘名額的獎項
-    if (!isCurrentPrizeValid || !selectedPrizeId || currentPrizeRemaining === 0) {
+    if (
+      !isCurrentPrizeValid ||
+      !selectedPrizeId ||
+      currentPrizeRemaining === 0
+    ) {
       const sortedPrizes = [...filteredPrizes].sort(
         (a, b) => b.level - a.level
       );
@@ -173,7 +178,7 @@ export default function LotteryControlPanel() {
   ]);
 
   return (
-    <div className="h-full bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 flex flex-col overflow-hidden">
+    <div className="max-h-[70vh] xl:max-h-[56vh] bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 flex flex-col overflow-y-auto">
       {/* 可滾動內容區 */}
       <div className="px-4 py-5 flex flex-col gap-3 overflow-y-auto flex-1 min-h-0">
         {/* 抽獎設定區 */}
@@ -238,10 +243,10 @@ export default function LotteryControlPanel() {
 
             {/* 3️⃣ 抽獎模式 */}
             <div>
-              <label className="text-base font-bold text-amber-900 flex items-center gap-1.5">
+              <label className="text-base font-bold text-amber-900 flex items-center gap-1.5 mb-2">
                 抽獎模式
               </label>
-              <div className="flex gap-2.5">
+              <div className="flex flex-col md:flex-row gap-2">
                 <DrawModeButton
                   isSelected={drawMode === "single"}
                   disabled={isAnimating}
@@ -301,7 +306,8 @@ export default function LotteryControlPanel() {
                     : "text-amber-900 cursor-pointer"
                 }`}
               >
-                跳過抽獎動畫（直接顯示結果）
+                跳過抽獎動畫
+                <span className="hidden lg:inline">（直接顯示結果）</span>
               </label>
             </div>
           )}
@@ -317,25 +323,34 @@ export default function LotteryControlPanel() {
               }
               className="w-full text-lg font-bold py-6 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white border-0 hover:shadow-[0_8px_30px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {prizes.length === 0 ? "請先設定獎項" : "開始抽獎"}
+              <>
+                {prizes.length === 0 ? (
+                  <div>
+                    <span className="hidden sm:inline">請先設定獎項</span>
+                    <span className="sm:hidden">開始抽獎</span>
+                  </div>
+                ) : (
+                  <div>開始抽獎</div>
+                )}
+              </>
             </Button>
           </div>
 
-          <div className="flex gap-2.5">
+          <div className="flex flex-col lg:flex-row gap-2.5">
             {/* 管理按鈕 */}
             <Button
               onClick={openManagement}
-              className="flex-1 text-base font-bold py-6 rounded-lg bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200"
+              className="lg:flex-1 text-base font-bold py-6 rounded-lg bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200"
             >
               抽獎設定
             </Button>
 
-            {/* 背景設定按鈕 */}
+            {/* 背景設定按鈕 - 小屏幕隱藏 */}
             <Button
               onClick={toggleBgPanel}
-              className={`flex-1 text-base font-bold py-6 rounded-lg text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 ${
+              className={`hidden xl:inline-flex lg:flex-1 text-base font-bold py-6 rounded-lg text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 ${
                 showBgPanel
-                  ? "bg-rose-600 hover:bg-rose-600 ring-3 ring-rose-300 scale-[1.02]"
+                  ? "bg-rose-600 hover:bg-rose-600 ring-3 ring-rose-300"
                   : "bg-rose-500 hover:bg-rose-600 hover:scale-[1.02] active:scale-95"
               }`}
             >

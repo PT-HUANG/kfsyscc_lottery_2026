@@ -86,22 +86,16 @@ export default function FloatingBackgroundPanel() {
   };
 
   return (
-    <div className="flex flex-col bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-xl shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 h-full">
-      {/* 標題列 - 固定不滾動 */}
-      <div className="px-4 py-3 flex items-center justify-between border-b-2 border-amber-300 shrink-0">
+    <div className="max-h-[38vh] overflow-y-auto bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-xl shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400">
+      {/* 標題列 */}
+      <div className="px-4 pr-2 py-3 flex items-center justify-between sticky top-0 bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 z-10">
         <div className="flex items-center gap-2 flex-1">
           <span className="font-bold text-sm text-amber-900">背景設定</span>
         </div>
-        <button
-          onClick={closeBgPanel}
-          className="ml-2 bg-transparent border-none text-xl cursor-pointer p-0 w-6 h-6 flex items-center justify-center text-amber-700 hover:text-amber-900 transition-colors"
-        >
-          ×
-        </button>
       </div>
 
-      {/* 控制面板 - 可滾動 */}
-      <div className="p-4 flex flex-col gap-1 overflow-y-auto grow min-h-0">
+      {/* 控制面板 */}
+      <div className="p-4 flex flex-col gap-1">
         {/* 預設背景選擇 */}
         <div>
           <label
