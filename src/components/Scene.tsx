@@ -299,7 +299,8 @@ function GachaScene({
         shouldStartAnimation.current = true;
       }
     }
-  }, [isAnimating, skipAnimation, handleDirectLottery, setIsAnnouncingResults, startNewDrawSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnimating, skipAnimation]);
 
   useFrame(({ clock }, delta) => {
     const time = clock.getElapsedTime();

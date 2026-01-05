@@ -61,6 +61,8 @@ export default function GachaPage() {
 
       {/* Loading 畫面 */}
       {loading && <LoadingScene />}
+
+      <div className="fixed bottom-2 left-1/2 translate-x-[-30%] z-50">version: v26.01.05</div>
     </>
   );
 }
