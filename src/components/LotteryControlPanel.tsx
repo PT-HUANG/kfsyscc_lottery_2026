@@ -5,6 +5,8 @@ import { useLotterySelectionStore } from "@/stores/useLotterySelectionStore";
 import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
+import { useLotteryRemote } from "@/hooks/useLotteryRemote";
+import { GACHA_COLORS } from "@/config/gachaConfig";
 
 export default function LotteryControlPanel() {
   // Get data from stores
@@ -26,12 +28,24 @@ export default function LotteryControlPanel() {
     skipAnimation,
     setSkipAnimation,
     isAnnouncingResults, // 🎯 公布結果狀態
+    showWinnerModal, // 🎯 監控彈窗狀態
+    setShowWinnerModal, // 🎯 設定彈窗狀態
   } = useLotteryDataStore();
 
-  const { openManagement, toggleBgPanel, showBgPanel } = useLotteryUIStore();
+  const { openManagement } = useLotteryUIStore();
 
   // Get lottery logic and validation
-  const { validateLottery, participants } = useLotteryLogic();
+  const { validateLottery, participants, drawMultipleWinners } =
+    useLotteryLogic();
+
+  // Remote control
+  const { sendDrawCommand, sendCloseModalCommand } = useLotteryRemote();
+
+  // 🎯 處理從後台關閉彈窗
+  const handleRemoteCloseModal = useCallback(() => {
+    sendCloseModalCommand();
+    setShowWinnerModal(false);
+  }, [sendCloseModalCommand, setShowWinnerModal]);
 
   // Calculate available groups
   const availableGroups = useMemo(
@@ -118,7 +132,73 @@ export default function LotteryControlPanel() {
       return;
     }
 
-    // 驗證通過，開始抽獎動畫
+    // 🎲 執行真實抽獎計算 (Backstage Side)
+    const lotteryResult = drawMultipleWinners(drawCount, {
+      skipWinners: skipWinners,
+      selectedGroup: selectedGroup,
+    });
+
+    if (
+      lotteryResult.error ||
+      !lotteryResult.winners ||
+      lotteryResult.winners.length === 0
+    ) {
+      alert(lotteryResult.error || "抽獎失敗");
+      return;
+    }
+
+    // 準備中獎者資料
+    const prizeName = selectedPrize.name;
+    const timestamp = Date.now();
+    // 取得或生成 session ID
+    // 這裡使用 store 中的 sessionId，如果沒有則生成一個臨時的 (Backstage 應該也有 sessionId)
+    const drawSessionId =
+      useLotteryDataStore.getState().currentDrawSessionId ||
+      `session-${Date.now()}`;
+
+    const winners = lotteryResult.winners.map((winner) => {
+      const recordId = `${winner.id}-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 11)}`;
+      return {
+        name: winner.name,
+        prizeId: selectedPrize.id,
+        prize: prizeName,
+        participantId: winner.id,
+        employeeId: winner.employeeId,
+        department: winner.department,
+        group: winner.group,
+        recordId,
+        timestamp,
+        drawSessionId,
+      };
+    });
+
+    const ballColor =
+      GACHA_COLORS[Math.floor(Math.random() * GACHA_COLORS.length)];
+    const { addWinnerRecord } = useLotteryDataStore.getState();
+
+    // 1️⃣ 立即寫入後台數據庫 (確保狀態更新)
+    winners.forEach((w) => {
+      addWinnerRecord({
+        id: w.participantId,
+        name: w.name,
+        employeeId: w.employeeId,
+        department: w.department,
+        group: w.group,
+        prizeId: w.prizeId,
+        prize: w.prize,
+        color: ballColor,
+        recordId: w.recordId,
+        timestamp: w.timestamp,
+        drawSessionId: w.drawSessionId,
+      });
+    });
+
+    // 📡 廣播抽獎指令給前端
+    sendDrawCommand(winners, ballColor, skipAnimation);
+
+    // 鎖定後台 UI
     setIsAnimating(true);
   }, [
     prizes,
@@ -129,6 +209,9 @@ export default function LotteryControlPanel() {
     getPrizeRemainingSlots,
     validateLottery,
     setIsAnimating,
+    drawMultipleWinners,
+    sendDrawCommand,
+    skipAnimation,
   ]);
 
   // 🎯 當分組改變或獎品抽完時，自動選擇下一個可用的獎項
@@ -178,6 +261,22 @@ export default function LotteryControlPanel() {
 
   return (
     <div className="max-h-[70vh] xl:max-h-[56vh] bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 flex flex-col overflow-y-auto">
+      <style jsx global>{`
+        @keyframes breathe {
+          0%,
+          100% {
+            transform: scale(1);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+          }
+          50% {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.6);
+          }
+        }
+        .animate-breathe {
+          animation: breathe 1.5s infinite ease-in-out !important;
+        }
+      `}</style>
       {/* 可滾動內容區 */}
       <div className="px-4 py-5 flex flex-col gap-3 overflow-y-auto flex-1 min-h-0">
         {/* 抽獎設定區 */}
@@ -317,10 +416,21 @@ export default function LotteryControlPanel() {
               disabled={
                 isAnimating ||
                 isAnnouncingResults || // 🎯 公布結果時禁用
+                showWinnerModal || // 🎯 彈窗顯示時禁用
                 prizes.length === 0 ||
                 getPrizeRemainingSlots(selectedPrizeId) === 0
               }
-              className="w-full text-lg font-bold py-6 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white border-0 hover:shadow-[0_8px_30px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className={`w-full text-lg font-bold py-6 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white border-0 hover:shadow-[0_8px_30px_rgba(16,185,129,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                !(
+                  isAnimating ||
+                  isAnnouncingResults ||
+                  showWinnerModal ||
+                  prizes.length === 0 ||
+                  getPrizeRemainingSlots(selectedPrizeId) === 0
+                )
+                  ? "animate-breathe"
+                  : ""
+              }`}
             >
               <>
                 {prizes.length === 0 ? (
@@ -335,25 +445,34 @@ export default function LotteryControlPanel() {
             </Button>
           </div>
 
+          {/* 關閉中獎彈窗按鈕 */}
+          <div>
+            <Button
+              onClick={handleRemoteCloseModal}
+              disabled={isAnimating}
+              className={`w-full text-base font-bold py-6 rounded-lg border-2 transition-all duration-200 ${
+                showWinnerModal
+                  ? "bg-rose-500 border-rose-600 text-white enabled:hover:bg-rose-600 shadow-[0_4px_15px_rgba(244,63,94,0.4)] enabled:hover:scale-[1.02] enabled:active:scale-95"
+                  : "bg-gray-100 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed hover:bg-gray-100"
+              }`}
+            >
+              關閉中獎彈窗
+            </Button>
+          </div>
+
           <div className="flex flex-col lg:flex-row gap-2.5">
             {/* 管理按鈕 */}
             <Button
               onClick={openManagement}
+              disabled={
+                isAnimating ||
+                isAnnouncingResults || // 🎯 公布結果時禁用
+                showWinnerModal || // 🎯 彈窗顯示時禁用
+                prizes.length === 0
+              }
               className="lg:flex-1 text-base font-bold py-6 rounded-lg bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200"
             >
               抽獎設定
-            </Button>
-
-            {/* 背景設定按鈕 - 小屏幕隱藏 */}
-            <Button
-              onClick={toggleBgPanel}
-              className={`hidden xl:inline-flex lg:flex-1 text-base font-bold py-6 rounded-lg text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 ${
-                showBgPanel
-                  ? "bg-rose-600 hover:bg-rose-600 ring-3 ring-rose-300"
-                  : "bg-rose-500 hover:bg-rose-600 hover:scale-[1.02] active:scale-95"
-              }`}
-            >
-              背景設定
             </Button>
           </div>
         </div>

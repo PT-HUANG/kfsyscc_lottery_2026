@@ -27,7 +27,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
     if (availableGroups.length === 1 && !selectedGroup) {
       setSelectedGroup(availableGroups[0]);
     }
-  }, []);
+  }, [availableGroups, selectedGroup]);
 
   const parseTextFile = useCallback(
     async (file: File, group: string): Promise<Prize[]> => {
@@ -200,7 +200,7 @@ export default function PrizeUpload({ onUploadComplete }: PrizeUploadProps) {
         handleFileUpload(file);
       }
     },
-    [handleFileUpload]
+    [handleFileUpload, participants.length]
   );
 
   return (

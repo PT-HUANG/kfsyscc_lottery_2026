@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface LotteryUIStore {
   // Modal states
@@ -22,24 +23,34 @@ interface LotteryUIStore {
   setSceneReady: (ready: boolean) => void;
 }
 
-export const useLotteryUIStore = create<LotteryUIStore>((set) => ({
-  // Modal states
-  showManagement: false,
-  openManagement: () => set({ showManagement: true }),
-  closeManagement: () => set({ showManagement: false }),
+export const useLotteryUIStore = create<LotteryUIStore>()(
+  persist(
+    (set) => ({
+      // Modal states
+      showManagement: false,
+      openManagement: () => set({ showManagement: true }),
+      closeManagement: () => set({ showManagement: false }),
 
-  showBgPanel: false,
-  openBgPanel: () => set({ showBgPanel: true }),
-  closeBgPanel: () => set({ showBgPanel: false }),
-  toggleBgPanel: () => set((state) => ({ showBgPanel: !state.showBgPanel })),
+      showBgPanel: false,
+      openBgPanel: () => set({ showBgPanel: true }),
+      closeBgPanel: () => set({ showBgPanel: false }),
+      toggleBgPanel: () => set((state) => ({ showBgPanel: !state.showBgPanel })),
 
-  // Loading states
-  loading: true,
-  setLoading: (loading) => set({ loading }),
+      // Loading states
+      loading: true,
+      setLoading: (loading) => set({ loading }),
 
-  progress: 0,
-  setProgress: (progress) => set({ progress }),
+      progress: 0,
+      setProgress: (progress) => set({ progress }),
 
-  sceneReady: false,
-  setSceneReady: (ready) => set({ sceneReady: ready }),
-}));
+      sceneReady: false,
+      setSceneReady: (ready) => set({ sceneReady: ready }),
+    }),
+    {
+      name: 'lottery-ui',
+      partialize: (state) => ({
+        showBgPanel: state.showBgPanel,
+      }),
+    }
+  )
+);

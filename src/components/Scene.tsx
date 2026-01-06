@@ -20,6 +20,9 @@ import { useLotterySelectionStore } from "@/stores/useLotterySelectionStore";
 import { useBackgroundStore, type BackgroundConfig } from "@/stores/useBackgroundStore";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 import { useLotteryLogic } from "@/hooks/useLotteryLogic";
+import { useLotteryReceiver } from "@/hooks/useLotteryReceiver";
+import { useLotteryRemote } from "@/hooks/useLotteryRemote";
+import { WinnerInfo } from "@/types/lottery";
 import {
   COIN_CONFIG,
   SHAKE_CONFIG,
@@ -107,16 +110,6 @@ interface GachaSceneProps {
   selectedGroup?: string; // 選擇的分組
 }
 
-interface WinnerInfo {
-  name: string;
-  prizeId: string; // 獎項 ID
-  prize: string; // 獎項名稱（備份顯示）
-  participantId: string;
-  employeeId?: string;
-  department?: string;
-  group: string; // 分組（必填）
-}
-
 // ==================== 扭蛋場景組件 ====================
 function GachaScene({
   onLoad,
@@ -125,6 +118,10 @@ function GachaScene({
   selectedGroup,
 }: GachaSceneProps) {
   const hasCalledOnLoad = useRef(false);
+
+  // Remote Control Hooks
+  const { pendingWinnersRef, pendingBallColorRef, pendingSkipAnimationRef } = useLotteryReceiver();
+  const { syncAnimationState, syncWinnerModalState, syncAnnouncingState } = useLotteryRemote();
 
   const isAnimating = useLotteryDataStore((state) => state.isAnimating);
   const setIsAnimating = useLotteryDataStore((state) => state.setIsAnimating);
@@ -135,10 +132,29 @@ function GachaScene({
   const skipWinners = useLotteryDataStore((state) => state.skipWinners); // 讀取全域設定
   const skipAnimation = useLotteryDataStore((state) => state.skipAnimation); // 是否跳過動畫
   const startNewDrawSession = useLotteryDataStore((state) => state.startNewDrawSession); // 開始新的抽獎輪次
+  const setCurrentDrawSessionId = useLotteryDataStore((state) => state.setCurrentDrawSessionId); // 設定當前抽獎輪次 ID
+
+  // 🎯 當 Modal 關閉時（無論是本地還是遠端），重置 3D 場景狀態
+  useEffect(() => {
+    if (!showWinnerModal) {
+      setSelectedBallId(null);
+      setFloatingBallColor("");
+      setFlashOpacity(0);
+      floatingProgress.current = 0;
+      setCurrentWinners([]);
+      currentWinnersRef.current = [];
+      hasStartedWinnerSequence.current = false;
+      if (winnerSequenceInterval.current) {
+        clearInterval(winnerSequenceInterval.current);
+        winnerSequenceInterval.current = null;
+      }
+    }
+  }, [showWinnerModal]);
 
   // 抽獎邏輯
   const { drawMultipleWinners, prizes } = useLotteryLogic();
   const [currentWinners, setCurrentWinners] = useState<WinnerInfo[]>([]);
+  const currentWinnersRef = useRef<WinnerInfo[]>([]); // 🎯 Ref for animation loop access
 
   const [coinVisible, setCoinVisible] = useState(false);
   const [coinPosition, setCoinPosition] = useState<[number, number, number]>(
@@ -185,6 +201,17 @@ function GachaScene({
     winners: WinnerInfo[];
     ballColor: string;
   } | null => {
+    // 優先使用遠端傳來的預計算中獎者
+    if (pendingWinnersRef.current && pendingWinnersRef.current.length > 0) {
+       const winners = pendingWinnersRef.current;
+       const ballColor = pendingBallColorRef.current || GACHA_COLORS[0];
+       
+       // Clear pending
+       pendingWinnersRef.current = null;
+       
+       return { winners, ballColor };
+    }
+
     // 取得選擇的獎項
     let currentPrize = prizes.find((p) => p.id === selectedPrizeId);
     if (!currentPrize && prizes.length > 0) {
@@ -240,6 +267,7 @@ function GachaScene({
 
     const { winners, ballColor } = result;
     setCurrentWinners(winners);
+    currentWinnersRef.current = winners;
 
     // 記錄所有中獎者到資料庫
     winners.forEach((winner) => {
@@ -252,6 +280,9 @@ function GachaScene({
         prizeId: winner.prizeId,
         prize: winner.prize,
         color: ballColor,
+        recordId: winner.recordId,
+        timestamp: winner.timestamp,
+        drawSessionId: winner.drawSessionId
       });
     });
 
@@ -260,7 +291,9 @@ function GachaScene({
 
     // 直接顯示 WinnerModal
     setShowWinnerModal(true);
+    syncWinnerModalState(true);
     setIsAnimating(false);
+    syncAnimationState(false);
   }, [
     executeLottery,
     setCurrentWinners,
@@ -268,6 +301,7 @@ function GachaScene({
     setFloatingBallColor,
     setShowWinnerModal,
     setIsAnimating,
+    syncAnimationState,
   ]);
 
   useEffect(() => {
@@ -282,14 +316,41 @@ function GachaScene({
     if (isAnimating && !animationInitialized.current) {
       animationInitialized.current = true;
 
+      // 🎯 確保清除可能還在運行的 interval (防止快速重啟時舊的繼續執行)
+      if (winnerSequenceInterval.current) {
+        clearInterval(winnerSequenceInterval.current);
+        winnerSequenceInterval.current = null;
+      }
+
+      // 🎯 確保關閉上一次的中獎彈窗
+      setShowWinnerModal(false);
+
+      // 🎯 設定抽獎輪次 ID
+      // 優先使用 pendingWinners 中的 sessionId，以確保前後台一致
+      if (pendingWinnersRef.current && pendingWinnersRef.current.length > 0) {
+        const firstWinner = pendingWinnersRef.current[0];
+        if (firstWinner.drawSessionId) {
+          setCurrentDrawSessionId(firstWinner.drawSessionId);
+        } else {
+          startNewDrawSession();
+        }
+      } else {
+        startNewDrawSession();
+      }
+
       // 🎯 開始新的抽獎輪次
-      startNewDrawSession();
+      // ... (existing sessionId logic) ...
 
       // 🎯 重置公布結果狀態
       setIsAnnouncingResults(false);
+      syncAnnouncingState(false);
+
+      // 檢查是否應該跳過動畫 (直接讀取最新狀態，避免閉包/渲染過時問題)
+      // 優先使用 pendingSkipAnimationRef，確保即時性
+      const shouldSkip = pendingSkipAnimationRef.current || useLotteryDataStore.getState().skipAnimation;
 
       // 如果啟用「跳過動畫」，直接顯示結果
-      if (skipAnimation) {
+      if (shouldSkip) {
         // 延遲到下一個事件循環，避免級聯渲染
         setTimeout(() => {
           handleDirectLottery();
@@ -300,7 +361,7 @@ function GachaScene({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAnimating, skipAnimation]);
+  }, [isAnimating]); // Remove skipAnimation from dependency to avoid double trigger logic, rely on isAnimating trigger and getState()
 
   useFrame(({ clock }, delta) => {
     const time = clock.getElapsedTime();
@@ -326,6 +387,15 @@ function GachaScene({
 
     // 開始金幣動畫
     if (shouldStartAnimation.current && !coinAnimating.current) {
+      // 🛡️ 防禦性檢查：如果這時發現應該跳過，則取消動畫並直接顯示結果
+      // 這種情況可能發生在狀態更新有極微小延遲時
+      if (pendingSkipAnimationRef.current || useLotteryDataStore.getState().skipAnimation) {
+        shouldStartAnimation.current = false;
+        // 確保在下一個循環處理結果，避免這裡直接調用可能導致的問題
+        setTimeout(() => handleDirectLottery(), 0);
+        return;
+      }
+
       coinAnimating.current = true;
       isFading.current = false;
       setCoinVisible(true);
@@ -390,7 +460,7 @@ function GachaScene({
           hasStartedWinnerSequence.current = true; // 🎯 標記已開始，防止重複執行
 
           // 🎯 先保存中獎者資料和顏色（在清除前）
-          const winnersToAdd = [...currentWinners];
+          const winnersToAdd = [...currentWinnersRef.current];
           const ballColor = floatingBallColor;
 
           // 🎯 立即清除球和視覺元素（在白光前）
@@ -403,6 +473,7 @@ function GachaScene({
 
           // 🎯 立即結束動畫狀態，讓左右側面板出現
           setIsAnimating(false);
+          syncAnimationState(false);
 
           setTimeout(() => {
             setShowFlash(false);
@@ -411,6 +482,7 @@ function GachaScene({
             if (winnersToAdd.length > 0) {
               // 🎯 開始公布結果，禁用開始抽獎按鈕
               setIsAnnouncingResults(true);
+              syncAnnouncingState(true);
 
               // 立即新增第一位中獎者
               addWinnerRecord({
@@ -422,6 +494,9 @@ function GachaScene({
                 prizeId: winnersToAdd[0].prizeId,
                 prize: winnersToAdd[0].prize,
                 color: ballColor,
+                recordId: winnersToAdd[0].recordId,
+                timestamp: winnersToAdd[0].timestamp,
+                drawSessionId: winnersToAdd[0].drawSessionId
               });
 
               // 如果有多位中獎者，每 1000ms 新增一位
@@ -438,6 +513,9 @@ function GachaScene({
                       prizeId: winnersToAdd[currentIndex].prizeId,
                       prize: winnersToAdd[currentIndex].prize,
                       color: ballColor,
+                      recordId: winnersToAdd[currentIndex].recordId,
+                      timestamp: winnersToAdd[currentIndex].timestamp,
+                      drawSessionId: winnersToAdd[currentIndex].drawSessionId
                     });
                     currentIndex++;
                   } else {
@@ -448,16 +526,20 @@ function GachaScene({
                     }
                     // 🎯 公布結果結束，啟用開始抽獎按鈕
                     setIsAnnouncingResults(false);
+                    syncAnnouncingState(false);
                     // 🎯 彈出 Modal 顯示所有中獎者
                     setShowWinnerModal(true);
+                    syncWinnerModalState(true);
                   }
                 }, 1000);
               } else {
                 // 只有一位中獎者，直接彈出 Modal
                 // 🎯 公布結果結束，啟用開始抽獎按鈕
                 setIsAnnouncingResults(false);
+                syncAnnouncingState(false);
                 // 🎯 彈出 Modal 顯示所有中獎者
                 setShowWinnerModal(true);
+                syncWinnerModalState(true);
               }
             } else {
               // 沒有中獎者的情況
@@ -491,11 +573,13 @@ function GachaScene({
   // 處理關閉彈窗
   const handleCloseModal = () => {
     setShowWinnerModal(false);
+    syncWinnerModalState(false);
     setSelectedBallId(null);
     setFloatingBallColor("");
     setFlashOpacity(0);
     floatingProgress.current = 0;
     setCurrentWinners([]);
+    currentWinnersRef.current = [];
     hasStartedWinnerSequence.current = false; // 🎯 重置標記
     // 🎯 確保清除 interval
     if (winnerSequenceInterval.current) {
@@ -521,6 +605,7 @@ function GachaScene({
 
     const { winners, ballColor } = result;
     setCurrentWinners(winners);
+    currentWinnersRef.current = winners;
 
     // 在軌道入口處（z 軸負方向，高處）生成一顆球
     const ballId = ballIdCounter.current++;

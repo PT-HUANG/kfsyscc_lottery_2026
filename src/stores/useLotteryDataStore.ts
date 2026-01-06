@@ -49,6 +49,7 @@ interface LotteryDataStore {
   // Draw session state (not persisted)
   currentDrawSessionId: string;
   startNewDrawSession: () => void;
+  setCurrentDrawSessionId: (id: string) => void;
 
   // Lottery settings (persisted)
   skipWinners: boolean; // 是否跳過已中獎者（防重複中獎）
@@ -58,7 +59,7 @@ interface LotteryDataStore {
 
   // Winner records (persisted)
   winnerRecords: WinnerRecord[];
-  addWinnerRecord: (record: Omit<WinnerRecord, "timestamp" | "recordId" | "drawSessionId">) => void;
+  addWinnerRecord: (record: Omit<WinnerRecord, "recordId" | "timestamp" | "drawSessionId"> & Partial<Pick<WinnerRecord, "recordId" | "timestamp" | "drawSessionId">>) => void;
   clearWinnerRecords: () => void;
 
   // Participants (persisted)
@@ -99,6 +100,7 @@ export const useLotteryDataStore = create<LotteryDataStore>()(
       startNewDrawSession: () => set({
         currentDrawSessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
       }),
+      setCurrentDrawSessionId: (id) => set({ currentDrawSessionId: id }),
 
       // Lottery settings
       skipWinners: true, // 預設啟用防重複中獎
@@ -109,18 +111,27 @@ export const useLotteryDataStore = create<LotteryDataStore>()(
       // Winner records
       winnerRecords: [],
       addWinnerRecord: (record) =>
-        set((state) => ({
-          winnerRecords: [
-            // 🎯 新記錄插入到陣列開頭（從上方顯示）
-            {
-              ...record,
-              recordId: `${record.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-              timestamp: Date.now(),
-              drawSessionId: state.currentDrawSessionId, // 記錄當前抽獎輪次 ID
-            },
-            ...state.winnerRecords,
-          ],
-        })),
+        set((state) => {
+           const recordId = record.recordId || `${record.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+           
+           // Check for duplicates by recordId
+           if (state.winnerRecords.some(r => r.recordId === recordId)) {
+             return state;
+           }
+           
+           return {
+            winnerRecords: [
+              // 🎯 新記錄插入到陣列開頭（從上方顯示）
+              {
+                ...record,
+                recordId: recordId,
+                timestamp: record.timestamp || Date.now(),
+                drawSessionId: record.drawSessionId || state.currentDrawSessionId,
+              },
+              ...state.winnerRecords,
+            ],
+          };
+        }),
       clearWinnerRecords: () => set({ winnerRecords: [] }),
 
       // Participants

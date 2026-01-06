@@ -169,7 +169,7 @@ export default function ParticipantUpload({
         handleFileUpload(file);
       }
     },
-    [handleFileUpload]
+    [handleFileUpload, groupName]
   );
 
   return (
