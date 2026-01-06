@@ -1,13 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { getLotteryChannel, LotteryMessage } from '@/utils/lotteryChannel';
 import { useLotteryDataStore } from '@/stores/useLotteryDataStore';
 import { WinnerInfo } from '@/types/lottery';
 
 export function useLotteryReceiver() {
-  const setIsAnimating = useLotteryDataStore((state) => state.setIsAnimating);
-  const setSkipAnimation = useLotteryDataStore((state) => state.setSkipAnimation);
-  const setShowWinnerModal = useLotteryDataStore((state) => state.setShowWinnerModal);
-  const setIsAnnouncingResults = useLotteryDataStore((state) => state.setIsAnnouncingResults);
   const pendingWinnersRef = useRef<WinnerInfo[] | null>(null);
   const pendingBallColorRef = useRef<string>('');
   const pendingSkipAnimationRef = useRef<boolean>(false);
@@ -15,6 +11,17 @@ export function useLotteryReceiver() {
   useEffect(() => {
     const channel = getLotteryChannel();
     if (!channel) return;
+
+    // 🎯 直接從 Store 獲取動作，避免將它們列入依賴項，增加熱更新穩定性
+    const {
+      setIsAnimating,
+      setSkipAnimation,
+      setShowWinnerModal,
+      setIsAnnouncingResults,
+      revealWinnerRecord,
+      addWinnerRecords,
+      setCurrentDrawSessionId
+    } = useLotteryDataStore.getState();
 
     channel.onmessage = (event: MessageEvent<LotteryMessage>) => {
       const data = event.data;
@@ -24,6 +31,27 @@ export function useLotteryReceiver() {
           pendingWinnersRef.current = data.winners;
           pendingBallColorRef.current = data.ballColor;
           pendingSkipAnimationRef.current = data.skipAnimation;
+          
+          // 🎯 重要：收到指令後，立即在本地 Store 設定 Session ID 與寫入名單
+          // 這樣看板就能立即偵測到數據，不需要等待 localStorage 同步
+          if (data.winners.length > 0) {
+            // 🐛 修復：確保 sessionId 永遠不會是空字符串，否則看板會無法顯示
+            const sessionId = data.winners[0].drawSessionId ||
+              `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+            setCurrentDrawSessionId(sessionId);
+
+            // 🔧 優化：使用批量添加方法，避免多次狀態更新，提升性能
+            addWinnerRecords(
+              data.winners.map(w => ({
+                ...w,
+                id: w.participantId,
+                color: data.ballColor,
+                drawSessionId: sessionId, // 🐛 確保每筆記錄都有正確的 sessionId
+                isRevealed: data.skipAnimation // 同步後台的揭露狀態
+              }))
+            );
+          }
+
           // Sync skipAnimation state immediately
           setSkipAnimation(data.skipAnimation);
           setIsAnimating(true);
@@ -36,6 +64,9 @@ export function useLotteryReceiver() {
           break;
         case 'SYNC_WINNER_MODAL':
           setShowWinnerModal(data.show);
+          break;
+        case 'REVEAL_WINNER':
+          revealWinnerRecord(data.recordId);
           break;
         case 'RESET_ANIMATION':
           setIsAnimating(false);
@@ -51,7 +82,7 @@ export function useLotteryReceiver() {
     return () => {
       channel.close();
     };
-  }, [setIsAnimating, setSkipAnimation]);
+  }, []); // 🎯 保持依賴項陣列不變
 
   return {
     pendingWinnersRef,

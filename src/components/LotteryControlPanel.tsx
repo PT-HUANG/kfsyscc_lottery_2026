@@ -30,6 +30,7 @@ export default function LotteryControlPanel() {
     isAnnouncingResults, // 🎯 公布結果狀態
     showWinnerModal, // 🎯 監控彈窗狀態
     setShowWinnerModal, // 🎯 設定彈窗狀態
+    addWinnerRecord, // 🎯 新增這個解構
   } = useLotteryDataStore();
 
   const { openManagement } = useLotteryUIStore();
@@ -115,6 +116,7 @@ export default function LotteryControlPanel() {
 
     // 計算本次要抽取的人數
     const drawCount = drawMode === "all" ? remainingSlots : 1;
+    console.log(`[Lottery] 準備抽獎: 模式=${drawMode}, 剩餘名額=${remainingSlots}, 預計抽取=${drawCount}`);
 
     // 檢查是否選擇了分組
     if (!selectedGroup) {
@@ -147,17 +149,22 @@ export default function LotteryControlPanel() {
       return;
     }
 
+    console.log(`[Lottery] 抽獎成功: 實際抽出人數=${lotteryResult.winners.length}`);
+
     // 準備中獎者資料
     const prizeName = selectedPrize.name;
     const timestamp = Date.now();
-    // 取得或生成 session ID
-    // 這裡使用 store 中的 sessionId，如果沒有則生成一個臨時的 (Backstage 應該也有 sessionId)
-    const drawSessionId =
-      useLotteryDataStore.getState().currentDrawSessionId ||
-      `session-${Date.now()}`;
+    // 🎯 生成本輪唯一的 Session ID
+    const drawSessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    const ballColor =
+      GACHA_COLORS[Math.floor(Math.random() * GACHA_COLORS.length)];
+    const { addWinnerRecords, setCurrentDrawSessionId } = useLotteryDataStore.getState();
+    
+    // 🎯 立即設定當前 Session ID，讓看板能偵測到變化
+    setCurrentDrawSessionId(drawSessionId);
 
-    const winners = lotteryResult.winners.map((winner) => {
-      const recordId = `${winner.id}-${Date.now()}-${Math.random()
+    const winners = lotteryResult.winners.map((winner, index) => {
+      const recordId = `${winner.id}-${Date.now()}-${index}-${Math.random()
         .toString(36)
         .slice(2, 11)}`;
       return {
@@ -171,29 +178,25 @@ export default function LotteryControlPanel() {
         recordId,
         timestamp,
         drawSessionId,
+        isRevealed: skipAnimation, // 🎯 傳遞揭露狀態
       };
     });
 
-    const ballColor =
-      GACHA_COLORS[Math.floor(Math.random() * GACHA_COLORS.length)];
-    const { addWinnerRecord } = useLotteryDataStore.getState();
-
-    // 1️⃣ 立即寫入後台數據庫 (確保狀態更新)
-    winners.forEach((w) => {
-      addWinnerRecord({
-        id: w.participantId,
-        name: w.name,
-        employeeId: w.employeeId,
-        department: w.department,
-        group: w.group,
-        prizeId: w.prizeId,
-        prize: w.prize,
-        color: ballColor,
-        recordId: w.recordId,
-        timestamp: w.timestamp,
-        drawSessionId: w.drawSessionId,
-      });
-    });
+    // 1️⃣ 立即批量寫入數據庫 (一次性寫入 30 筆，最穩定)
+    addWinnerRecords(winners.map(w => ({
+      id: w.participantId,
+      name: w.name,
+      employeeId: w.employeeId,
+      department: w.department,
+      group: w.group,
+      prizeId: w.prizeId,
+      prize: w.prize,
+      color: ballColor,
+      recordId: w.recordId,
+      timestamp: w.timestamp,
+      drawSessionId: w.drawSessionId,
+      isRevealed: w.isRevealed,
+    })));
 
     // 📡 廣播抽獎指令給前端
     sendDrawCommand(winners, ballColor, skipAnimation);

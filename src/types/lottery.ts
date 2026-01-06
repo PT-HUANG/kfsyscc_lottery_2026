@@ -10,6 +10,7 @@ export interface WinnerInfo {
   recordId?: string;
   timestamp?: number;
   drawSessionId?: string;
+  isRevealed?: boolean;
 }
 
 export type LotteryMessage =
@@ -17,5 +18,6 @@ export type LotteryMessage =
   | { type: 'SYNC_ANIMATION'; isAnimating: boolean }
   | { type: 'SYNC_ANNOUNCING'; isAnnouncing: boolean }
   | { type: 'SYNC_WINNER_MODAL'; show: boolean }
+  | { type: 'REVEAL_WINNER'; recordId: string }
   | { type: 'RESET_ANIMATION' }
   | { type: 'CLOSE_MODAL' };

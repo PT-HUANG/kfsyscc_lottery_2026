@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { getLotteryChannel, LotteryMessage } from '@/utils/lotteryChannel';
+import { WinnerInfo } from '@/types/lottery';
 
 export function useLotteryRemote() {
   const channelRef = useRef<BroadcastChannel | null>(null);
@@ -11,7 +12,7 @@ export function useLotteryRemote() {
     };
   }, []);
 
-  const sendDrawCommand = useCallback((winners: any[], ballColor: string, skipAnimation: boolean) => {
+  const sendDrawCommand = useCallback((winners: WinnerInfo[], ballColor: string, skipAnimation: boolean) => {
     channelRef.current?.postMessage({
       type: 'START_DRAW',
       winners,
@@ -47,11 +48,19 @@ export function useLotteryRemote() {
     } as LotteryMessage);
   }, []);
 
+  const syncRevealWinner = useCallback((recordId: string) => {
+    channelRef.current?.postMessage({
+      type: 'REVEAL_WINNER',
+      recordId,
+    } as LotteryMessage);
+  }, []);
+
   return {
     sendDrawCommand,
     syncAnimationState,
     sendCloseModalCommand,
     syncWinnerModalState,
-    syncAnnouncingState
+    syncAnnouncingState,
+    syncRevealWinner
   };
 }

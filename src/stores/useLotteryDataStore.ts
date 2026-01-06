@@ -13,6 +13,7 @@ export interface WinnerRecord {
   color: string;
   timestamp: number;
   drawSessionId?: string; // 抽獎輪次 ID（用於區分不同輪的抽獎）
+  isRevealed?: boolean; // 🎯 是否已揭露（用於控制動畫循序顯示）
 }
 
 export interface Participant {
@@ -59,7 +60,9 @@ interface LotteryDataStore {
 
   // Winner records (persisted)
   winnerRecords: WinnerRecord[];
-  addWinnerRecord: (record: Omit<WinnerRecord, "recordId" | "timestamp" | "drawSessionId"> & Partial<Pick<WinnerRecord, "recordId" | "timestamp" | "drawSessionId">>) => void;
+  addWinnerRecord: (record: Omit<WinnerRecord, "recordId" | "timestamp" | "drawSessionId"> & Partial<Pick<WinnerRecord, "recordId" | "timestamp" | "drawSessionId" | "isRevealed">>) => void;
+  addWinnerRecords: (records: Array<Omit<WinnerRecord, "recordId" | "timestamp" | "drawSessionId"> & Partial<Pick<WinnerRecord, "recordId" | "timestamp" | "drawSessionId" | "isRevealed">>>) => void;
+  revealWinnerRecord: (recordId: string) => void; // 🎯 揭露特定中獎紀錄
   clearWinnerRecords: () => void;
 
   // Participants (persisted)
@@ -112,14 +115,18 @@ export const useLotteryDataStore = create<LotteryDataStore>()(
       winnerRecords: [],
       addWinnerRecord: (record) =>
         set((state) => {
-           const recordId = record.recordId || `${record.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-           
-           // Check for duplicates by recordId
-           if (state.winnerRecords.some(r => r.recordId === recordId)) {
-             return state;
-           }
-           
-           return {
+          const recordId =
+            record.recordId ||
+            `${record.id}-${Date.now()}-${Math.random()
+              .toString(36)
+              .slice(2, 11)}`;
+
+          // Check for duplicates by recordId
+          if (state.winnerRecords.some((r) => r.recordId === recordId)) {
+            return state;
+          }
+
+          return {
             winnerRecords: [
               // 🎯 新記錄插入到陣列開頭（從上方顯示）
               {
@@ -127,11 +134,47 @@ export const useLotteryDataStore = create<LotteryDataStore>()(
                 recordId: recordId,
                 timestamp: record.timestamp || Date.now(),
                 drawSessionId: record.drawSessionId || state.currentDrawSessionId,
+                isRevealed: record.isRevealed ?? true, // 預設為已揭露（相容舊邏輯）
               },
               ...state.winnerRecords,
             ],
           };
         }),
+      addWinnerRecords: (records) =>
+        set((state) => {
+          const now = Date.now();
+
+          const newRecords = records.map((record, index) => ({
+            ...record,
+            // 🎯 優先使用傳入資料自帶的 sessionId，其次才是 state 中的
+            drawSessionId: record.drawSessionId || state.currentDrawSessionId,
+            // 🎯 確保 recordId 絕對唯一，加上 index
+            recordId:
+              record.recordId ||
+              `${record.id}-${now}-${index}-${Math.random()
+                .toString(36)
+                .slice(2, 11)}`,
+            // 🐛 修復：為批量添加的記錄設置遞增的時間戳，確保排序穩定
+            // 越後面的記錄時間戳越大，會顯示在越上方
+            timestamp: record.timestamp || (now + index),
+            isRevealed: record.isRevealed ?? true,
+          }));
+
+          // 過濾掉重複的 ID
+          const filteredNewRecords = newRecords.filter(
+            (nr) => !state.winnerRecords.some((r) => r.recordId === nr.recordId)
+          );
+
+          return {
+            winnerRecords: [...filteredNewRecords, ...state.winnerRecords],
+          };
+        }),
+      revealWinnerRecord: (recordId) =>
+        set((state) => ({
+          winnerRecords: state.winnerRecords.map((r) =>
+            r.recordId === recordId ? { ...r, isRevealed: true } : r
+          ),
+        })),
       clearWinnerRecords: () => set({ winnerRecords: [] }),
 
       // Participants

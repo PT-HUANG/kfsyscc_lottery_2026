@@ -121,11 +121,12 @@ function GachaScene({
 
   // Remote Control Hooks
   const { pendingWinnersRef, pendingBallColorRef, pendingSkipAnimationRef } = useLotteryReceiver();
-  const { syncAnimationState, syncWinnerModalState, syncAnnouncingState } = useLotteryRemote();
+  const { syncAnimationState, syncWinnerModalState, syncAnnouncingState, syncRevealWinner } = useLotteryRemote();
 
   const isAnimating = useLotteryDataStore((state) => state.isAnimating);
   const setIsAnimating = useLotteryDataStore((state) => state.setIsAnimating);
   const addWinnerRecord = useLotteryDataStore((state) => state.addWinnerRecord);
+  const revealWinnerRecord = useLotteryDataStore((state) => state.revealWinnerRecord);
   const setIsAnnouncingResults = useLotteryDataStore((state) => state.setIsAnnouncingResults); // 🎯 設定公布結果狀態
   const showWinnerModal = useLotteryDataStore((state) => state.showWinnerModal);
   const setShowWinnerModal = useLotteryDataStore((state) => state.setShowWinnerModal);
@@ -143,7 +144,8 @@ function GachaScene({
       floatingProgress.current = 0;
       setCurrentWinners([]);
       currentWinnersRef.current = [];
-      hasStartedWinnerSequence.current = false;
+      hasStartedWinnerSequence.current = false; // 🎯 彈窗關閉才重置
+      animationInitialized.current = false; // 🎯 彈窗關閉才重置
       if (winnerSequenceInterval.current) {
         clearInterval(winnerSequenceInterval.current);
         winnerSequenceInterval.current = null;
@@ -254,7 +256,7 @@ function GachaScene({
     }));
 
     return { winners, ballColor };
-  }, [prizes, selectedPrizeId, selectedGroup, drawCount, skipWinners, drawMultipleWinners]);
+  }, [prizes, selectedPrizeId, selectedGroup, drawCount, skipWinners, drawMultipleWinners, pendingWinnersRef, pendingBallColorRef]);
 
   // 處理跳過動畫，直接顯示結果
   const handleDirectLottery = useCallback(() => {
@@ -282,7 +284,8 @@ function GachaScene({
         color: ballColor,
         recordId: winner.recordId,
         timestamp: winner.timestamp,
-        drawSessionId: winner.drawSessionId
+        drawSessionId: winner.drawSessionId,
+        isRevealed: winner.isRevealed ?? true
       });
     });
 
@@ -302,6 +305,7 @@ function GachaScene({
     setShowWinnerModal,
     setIsAnimating,
     syncAnimationState,
+    syncWinnerModalState,
   ]);
 
   useEffect(() => {
@@ -335,6 +339,7 @@ function GachaScene({
           startNewDrawSession();
         }
       } else {
+        // 如果是本地觸發（非廣播），則開啟新 session
         startNewDrawSession();
       }
 
@@ -366,7 +371,7 @@ function GachaScene({
   useFrame(({ clock }, delta) => {
     const time = clock.getElapsedTime();
 
-    // 當動畫停止時重置所有狀態
+    // 當動畫停止時重置 3D 視覺狀態（但不重置揭露計時器，因為揭露是在動畫後才開始）
     if (prevIsAnimating.current && !isAnimating) {
       shouldStartAnimation.current = false;
       coinAnimating.current = false;
@@ -375,13 +380,8 @@ function GachaScene({
       setCoinOpacity(1);
       setIsMachineShaking(false);
       coinDisappearTime.current = null;
-      hasStartedWinnerSequence.current = false; // 🎯 重置逐筆新增標記
-      animationInitialized.current = false; // 🎯 重置初始化標記
-      // 🎯 清除可能還在運行的 interval
-      if (winnerSequenceInterval.current) {
-        clearInterval(winnerSequenceInterval.current);
-        winnerSequenceInterval.current = null;
-      }
+      // 🎯 注意：這裡不再清除 winnerSequenceInterval.current
+      // 因為揭露動畫是在 isAnimating 變為 false 之後才執行的
     }
     prevIsAnimating.current = isAnimating;
 
@@ -471,55 +471,39 @@ function GachaScene({
           // 顯示白光
           setShowFlash(true);
 
-          // 🎯 立即結束動畫狀態，讓左右側面板出現
-          setIsAnimating(false);
-          syncAnimationState(false);
-
           setTimeout(() => {
             setShowFlash(false);
 
-            // 🎯 逐筆新增中獎者到 WinnerRecordBoard（不彈出 Modal）
+            // 🎯 結束動畫狀態，讓左右側面板在第一個人揭露時才出現
+            setIsAnimating(false);
+            syncAnimationState(false);
+
+            // 🎯 逐筆揭露中獎者（已在後台寫入，此處僅切換 isRevealed）
             if (winnersToAdd.length > 0) {
               // 🎯 開始公布結果，禁用開始抽獎按鈕
               setIsAnnouncingResults(true);
               syncAnnouncingState(true);
 
-              // 立即新增第一位中獎者
-              addWinnerRecord({
-                id: winnersToAdd[0].participantId,
-                name: winnersToAdd[0].name,
-                employeeId: winnersToAdd[0].employeeId,
-                department: winnersToAdd[0].department,
-                group: winnersToAdd[0].group,
-                prizeId: winnersToAdd[0].prizeId,
-                prize: winnersToAdd[0].prize,
-                color: ballColor,
-                recordId: winnersToAdd[0].recordId,
-                timestamp: winnersToAdd[0].timestamp,
-                drawSessionId: winnersToAdd[0].drawSessionId
-              });
+              // 立即揭露第一位中獎者
+              const firstRecordId = winnersToAdd[0].recordId;
+              if (firstRecordId) {
+                revealWinnerRecord(firstRecordId);
+                syncRevealWinner(firstRecordId);
+              }
 
-              // 如果有多位中獎者，每 1000ms 新增一位
+              // 如果有多位中獎者，每 1000ms 揭露一位
               if (winnersToAdd.length > 1) {
                 let currentIndex = 1;
                 winnerSequenceInterval.current = setInterval(() => {
                   if (currentIndex < winnersToAdd.length) {
-                    addWinnerRecord({
-                      id: winnersToAdd[currentIndex].participantId,
-                      name: winnersToAdd[currentIndex].name,
-                      employeeId: winnersToAdd[currentIndex].employeeId,
-                      department: winnersToAdd[currentIndex].department,
-                      group: winnersToAdd[currentIndex].group,
-                      prizeId: winnersToAdd[currentIndex].prizeId,
-                      prize: winnersToAdd[currentIndex].prize,
-                      color: ballColor,
-                      recordId: winnersToAdd[currentIndex].recordId,
-                      timestamp: winnersToAdd[currentIndex].timestamp,
-                      drawSessionId: winnersToAdd[currentIndex].drawSessionId
-                    });
+                    const rid = winnersToAdd[currentIndex].recordId;
+                    if (rid) {
+                      revealWinnerRecord(rid);
+                      syncRevealWinner(rid);
+                    }
                     currentIndex++;
                   } else {
-                    // 所有中獎者都已新增，清理剩餘狀態並彈出 Modal
+                    // 所有中獎者都已揭露，清理剩餘狀態並彈出 Modal
                     if (winnerSequenceInterval.current) {
                       clearInterval(winnerSequenceInterval.current);
                       winnerSequenceInterval.current = null;
@@ -533,13 +517,15 @@ function GachaScene({
                   }
                 }, 1000);
               } else {
-                // 只有一位中獎者，直接彈出 Modal
-                // 🎯 公布結果結束，啟用開始抽獎按鈕
-                setIsAnnouncingResults(false);
-                syncAnnouncingState(false);
-                // 🎯 彈出 Modal 顯示所有中獎者
-                setShowWinnerModal(true);
-                syncWinnerModalState(true);
+                // 只有一位中獎者，稍微延遲後彈出 Modal，讓看板有時間顯示
+                setTimeout(() => {
+                  // 🎯 公布結果結束，啟用開始抽獎按鈕
+                  setIsAnnouncingResults(false);
+                  syncAnnouncingState(false);
+                  // 🎯 彈出 Modal 顯示所有中獎者
+                  setShowWinnerModal(true);
+                  syncWinnerModalState(true);
+                }, 1500);
               }
             } else {
               // 沒有中獎者的情況
@@ -698,8 +684,8 @@ function GachaScene({
         <mesh position={[0, 3, 10]} renderOrder={999}>
           <planeGeometry args={[100, 100]} />
           <meshStandardMaterial
-            color="#000000"
-            emissive="#000000"
+            color="#FFFFFF"
+            emissive="#FFFFFF"
             emissiveIntensity={flashOpacity * 5}
             transparent
             opacity={flashOpacity}

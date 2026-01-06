@@ -12,23 +12,40 @@ export default function WinnerRecordBoard() {
 
   // 🎯 只顯示本輪中獎者（根據 drawSessionId 過濾）
   const latestRoundRecords = useMemo(() => {
-    if (!currentDrawSessionId) return [];
-    return winnerRecords.filter(
+    if (!currentDrawSessionId) {
+      console.log("[Board] No currentDrawSessionId, waiting...");
+      return [];
+    }
+    const filtered = winnerRecords.filter(
       (record) => record.drawSessionId === currentDrawSessionId
     );
+    console.log(`[Board] Session: ${currentDrawSessionId}, Found records: ${filtered.length} / Total: ${winnerRecords.length}`);
+    return filtered;
   }, [winnerRecords, currentDrawSessionId]);
+
+  // 🎯 僅顯示已揭露的紀錄，並按時間戳升序排列後反轉（最晚中獎的在最上面）
+  const revealedRecords = useMemo(() => {
+    const revealed = latestRoundRecords.filter((r) => r.isRevealed !== false);
+    // 按時間戳升序排列，然後反轉，讓最晚中獎的顯示在最上方
+    revealed.sort((a, b) => a.timestamp - b.timestamp);
+    if (latestRoundRecords.length > 0) {
+      console.log(`[Board] Revealed: ${revealed.length} / ${latestRoundRecords.length}`);
+    }
+    return revealed.reverse();
+  }, [latestRoundRecords]);
 
   // 🎯 取得最新時間戳，判斷記錄是否為新加入的
   const latestTimestamp = useMemo(() => {
-    if (latestRoundRecords.length === 0) return 0;
-    return Math.max(...latestRoundRecords.map((r) => r.timestamp));
-  }, [latestRoundRecords]);
+    if (revealedRecords.length === 0) return 0;
+    return Math.max(...revealedRecords.map((r) => r.timestamp));
+  }, [revealedRecords]);
 
   const isRecordNew = (timestamp: number) => {
     // 與最新記錄的時間差小於 800ms 視為新記錄
     return latestTimestamp - timestamp < 800;
   };
 
+  // 🎯 只要本輪有紀錄就顯示看板（外框），即便還沒揭露任何人
   if (latestRoundRecords.length === 0) {
     return null;
   }
@@ -129,7 +146,7 @@ export default function WinnerRecordBoard() {
             <div className="inline-flex items-center gap-1 sm:gap-1.5 text-orange-700">
               <span className="font-medium">共</span>
               <span className="font-bold text-red-700">
-                {latestRoundRecords.length}
+                {revealedRecords.length} / {latestRoundRecords.length}
               </span>
               <span className="font-medium">位中獎</span>
             </div>
@@ -138,7 +155,12 @@ export default function WinnerRecordBoard() {
 
         {/* 記錄列表 - 去邊框化設計 */}
         <div className="flex flex-col gap-2 sm:gap-2.5">
-          {latestRoundRecords.map((record, index) => {
+          {revealedRecords.length === 0 && (
+            <div className="text-center py-8 text-orange-400 font-medium animate-pulse">
+              準備揭曉...
+            </div>
+          )}
+          {revealedRecords.map((record, index) => {
             const isNew = isRecordNew(record.timestamp);
             return (
               <div
@@ -152,7 +174,7 @@ export default function WinnerRecordBoard() {
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
                       <span className="text-white font-bold text-xs sm:text-sm">
-                        {String(latestRoundRecords.length - index).padStart(
+                        {String(revealedRecords.length - index).padStart(
                           2,
                           "0"
                         )}
