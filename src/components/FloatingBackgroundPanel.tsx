@@ -85,7 +85,7 @@ export default function FloatingBackgroundPanel() {
   };
 
   return (
-    <div className="max-h-[70vh] xl:max-h-[56vh] overflow-y-auto bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400">
+    <div className="max-h-[70vh] xl:max-h-[70vh] overflow-y-auto bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400">
       {/* 控制面板 */}
       <div className="p-5 flex flex-col gap-2">
         {/* 預設背景選擇 */}

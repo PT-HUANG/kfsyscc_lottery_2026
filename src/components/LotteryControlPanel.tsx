@@ -260,7 +260,7 @@ export default function LotteryControlPanel() {
   ]);
 
   return (
-    <div className="max-h-[70vh] xl:max-h-[56vh] bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 flex flex-col overflow-y-auto">
+    <div className="max-h-[70vh] xl:max-h-[70vh] bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 rounded-lg shadow-[0_8px_30px_rgba(168,85,247,0.2)] border-2 border-amber-400 flex flex-col overflow-y-auto">
       <style jsx global>{`
         @keyframes breathe {
           0%,
@@ -467,8 +467,7 @@ export default function LotteryControlPanel() {
               disabled={
                 isAnimating ||
                 isAnnouncingResults || // 🎯 公布結果時禁用
-                showWinnerModal || // 🎯 彈窗顯示時禁用
-                prizes.length === 0
+                showWinnerModal // 🎯 彈窗顯示時禁用
               }
               className="lg:flex-1 text-base font-bold py-6 rounded-lg bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200"
             >
