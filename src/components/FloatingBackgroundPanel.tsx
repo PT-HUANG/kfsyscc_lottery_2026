@@ -235,7 +235,7 @@ export default function FloatingBackgroundPanel() {
         {/* Reset Button */}
         <Button
           onClick={resetConfig}
-          className="mt-2 w-full text-base font-bold py-6 rounded-lg bg-amber-600 hover:bg-amber-700 text-white border-0 shadow-md hover:scale-[1.02] active:scale-95 transition-all duration-200"
+          className="mt-2 w-full text-base font-bold py-6 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-md hover:scale-[1.02] active:scale-95 transition-all duration-200"
         >
           重置數值
         </Button>

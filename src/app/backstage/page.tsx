@@ -1,16 +1,20 @@
 "use client";
 import LotteryControlPanel from "@/components/LotteryControlPanel";
 import FloatingBackgroundPanel from "@/components/FloatingBackgroundPanel";
+import ThemeSelector from "@/components/ThemeSelector";
 import ManagementModal from "@/components/ManagementModal";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 import { useLotteryReceiver } from "@/hooks/useLotteryReceiver";
 import { useStorageSync } from "@/hooks/useStorageSync";
+import { useThemeSync } from "@/hooks/useThemeSync";
 
 export default function BackstagePage() {
   // Sync state from frontend (e.g. isAnimating)
   useLotteryReceiver();
   // Sync data from other tabs (localStorage)
   useStorageSync();
+  // Sync theme from other tabs (BroadcastChannel)
+  useThemeSync();
 
   const {
     showManagement,
@@ -34,6 +38,13 @@ export default function BackstagePage() {
 
         {/* Right Column: Settings & Background */}
         <div className="flex-1 w-full max-w-md flex flex-col gap-4">
+           {/* Theme Selector */}
+           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 transition-all">
+              <h2 className="text-lg font-semibold mb-3 text-gray-700">主題風格設定</h2>
+              <ThemeSelector />
+           </div>
+
+           {/* Background Settings */}
            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 transition-all">
               <h2 className="text-lg font-semibold mb-3 text-gray-700">背景設定</h2>
               <FloatingBackgroundPanel />

@@ -6,11 +6,14 @@ import LoadingScene from "@/components/LoadingScene";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
 import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 import { useStorageSync } from "@/hooks/useStorageSync";
+import { useThemeSync } from "@/hooks/useThemeSync";
 import "./loading.css";
 
 export default function GachaPage() {
   // Sync data from other tabs (localStorage)
   useStorageSync();
+  // Sync theme from backstage (BroadcastChannel)
+  useThemeSync();
 
   // UI Store
   const {
@@ -42,7 +45,7 @@ export default function GachaPage() {
 
       {!loading && (
         <div className="hidden sm:block fixed bottom-2 left-1/2 translate-x-[-30%] z-50 text-black text-lg">
-          version: v26.01.05
+          version: v26.01.07
         </div>
       )}
     </>
