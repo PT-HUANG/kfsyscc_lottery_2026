@@ -4,9 +4,11 @@ import FloatingBackgroundPanel from "@/components/FloatingBackgroundPanel";
 import ThemeSelector from "@/components/ThemeSelector";
 import ManagementModal from "@/components/ManagementModal";
 import { useLotteryUIStore } from "@/stores/useLotteryUIStore";
+import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 import { useLotteryReceiver } from "@/hooks/useLotteryReceiver";
 import { useStorageSync } from "@/hooks/useStorageSync";
 import { useThemeSync } from "@/hooks/useThemeSync";
+import { usePreventClose } from "@/hooks/usePreventClose";
 
 export default function BackstagePage() {
   // Sync state from frontend (e.g. isAnimating)
@@ -20,6 +22,14 @@ export default function BackstagePage() {
     showManagement,
     closeManagement,
   } = useLotteryUIStore();
+
+  const { isAnimating, isAnnouncingResults, showWinnerModal } = useLotteryDataStore();
+
+  // 🎯 防止在抽奖进行中关闭后台页面
+  usePreventClose(
+    isAnimating || isAnnouncingResults || showWinnerModal,
+    "抽獎正在進行中，確定要離開嗎？"
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 p-4 md:p-8 flex flex-col gap-6">

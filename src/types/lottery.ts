@@ -20,4 +20,5 @@ export type LotteryMessage =
   | { type: 'SYNC_WINNER_MODAL'; show: boolean }
   | { type: 'REVEAL_WINNER'; recordId: string }
   | { type: 'RESET_ANIMATION' }
-  | { type: 'CLOSE_MODAL' };
+  | { type: 'CLOSE_MODAL' }
+  | { type: 'TOGGLE_WINNER_BOARD'; show: boolean };

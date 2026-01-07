@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { getLotteryChannel, LotteryMessage } from '@/utils/lotteryChannel';
 import { useLotteryDataStore } from '@/stores/useLotteryDataStore';
+import { useLotteryUIStore } from '@/stores/useLotteryUIStore';
 import { WinnerInfo } from '@/types/lottery';
 
 export function useLotteryReceiver() {
@@ -22,6 +23,10 @@ export function useLotteryReceiver() {
       addWinnerRecords,
       setCurrentDrawSessionId
     } = useLotteryDataStore.getState();
+
+    const {
+      setShowWinnerBoard
+    } = useLotteryUIStore.getState();
 
     channel.onmessage = (event: MessageEvent<LotteryMessage>) => {
       const data = event.data;
@@ -75,6 +80,9 @@ export function useLotteryReceiver() {
         case 'CLOSE_MODAL':
           setShowWinnerModal(false);
           setIsAnimating(false);
+          break;
+        case 'TOGGLE_WINNER_BOARD':
+          setShowWinnerBoard(data.show);
           break;
       }
     };

@@ -55,12 +55,20 @@ export function useLotteryRemote() {
     } as LotteryMessage);
   }, []);
 
+  const toggleWinnerBoard = useCallback((show: boolean) => {
+    channelRef.current?.postMessage({
+      type: 'TOGGLE_WINNER_BOARD',
+      show,
+    } as LotteryMessage);
+  }, []);
+
   return {
     sendDrawCommand,
     syncAnimationState,
     sendCloseModalCommand,
     syncWinnerModalState,
     syncAnnouncingState,
-    syncRevealWinner
+    syncRevealWinner,
+    toggleWinnerBoard
   };
 }

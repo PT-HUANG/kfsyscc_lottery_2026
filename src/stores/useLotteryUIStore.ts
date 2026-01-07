@@ -12,6 +12,11 @@ interface LotteryUIStore {
   closeBgPanel: () => void;
   toggleBgPanel: () => void;
 
+  // Winner board visibility
+  showWinnerBoard: boolean;
+  setShowWinnerBoard: (show: boolean) => void;
+  toggleWinnerBoard: () => void;
+
   // Loading states
   loading: boolean;
   setLoading: (loading: boolean) => void;
@@ -36,6 +41,11 @@ export const useLotteryUIStore = create<LotteryUIStore>()(
       closeBgPanel: () => set({ showBgPanel: false }),
       toggleBgPanel: () => set((state) => ({ showBgPanel: !state.showBgPanel })),
 
+      // Winner board visibility
+      showWinnerBoard: true, // 預設顯示
+      setShowWinnerBoard: (show) => set({ showWinnerBoard: show }),
+      toggleWinnerBoard: () => set((state) => ({ showWinnerBoard: !state.showWinnerBoard })),
+
       // Loading states
       loading: true,
       setLoading: (loading) => set({ loading }),
@@ -50,6 +60,7 @@ export const useLotteryUIStore = create<LotteryUIStore>()(
       name: 'lottery-ui',
       partialize: (state) => ({
         showBgPanel: state.showBgPanel,
+        showWinnerBoard: state.showWinnerBoard, // 持久化看板顯示狀態
       }),
     }
   )

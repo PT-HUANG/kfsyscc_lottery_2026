@@ -32,20 +32,27 @@ export default function LotteryControlPanel() {
     setShowWinnerModal, // 🎯 設定彈窗狀態
   } = useLotteryDataStore();
 
-  const { openManagement } = useLotteryUIStore();
+  const { openManagement, showWinnerBoard, toggleWinnerBoard } = useLotteryUIStore();
 
   // Get lottery logic and validation
   const { validateLottery, participants, drawMultipleWinners } =
     useLotteryLogic();
 
   // Remote control
-  const { sendDrawCommand, sendCloseModalCommand } = useLotteryRemote();
+  const { sendDrawCommand, sendCloseModalCommand, toggleWinnerBoard: remoteToggleWinnerBoard } = useLotteryRemote();
 
   // 🎯 處理從後台關閉彈窗
   const handleRemoteCloseModal = useCallback(() => {
     sendCloseModalCommand();
     setShowWinnerModal(false);
   }, [sendCloseModalCommand, setShowWinnerModal]);
+
+  // 🎯 處理從後台切換中獎看板顯示
+  const handleToggleWinnerBoard = useCallback(() => {
+    const newState = !showWinnerBoard;
+    toggleWinnerBoard(); // 更新本地狀態
+    remoteToggleWinnerBoard(newState); // 同步到前台
+  }, [showWinnerBoard, toggleWinnerBoard, remoteToggleWinnerBoard]);
 
   // Calculate available groups
   const availableGroups = useMemo(
@@ -454,11 +461,26 @@ export default function LotteryControlPanel() {
               disabled={isAnimating}
               className={`w-full text-base font-bold py-6 rounded-lg border-2 transition-all duration-200 ${
                 showWinnerModal
-                  ? "bg-rose-500 border-rose-600 text-white enabled:hover:bg-rose-600 shadow-[0_4px_15px_rgba(244,63,94,0.4)] enabled:hover:scale-[1.02] enabled:active:scale-95"
+                  ? "bg-red-500 border-red-600 text-white enabled:hover:bg-red-600 shadow-[0_4px_15px_rgba(239,68,68,0.4)] enabled:hover:scale-[1.02] enabled:active:scale-95"
                   : "bg-gray-100 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed hover:bg-gray-100"
               }`}
             >
               關閉中獎視窗
+            </Button>
+          </div>
+
+          {/* 切換中獎看板顯示按鈕 */}
+          <div>
+            <Button
+              onClick={handleToggleWinnerBoard}
+              disabled={isAnimating}
+              className={`w-full text-base font-bold py-6 rounded-lg border-0 transition-all duration-200 ${
+                showWinnerBoard
+                  ? "bg-slate-500 text-white enabled:hover:bg-slate-600 shadow-[0_4px_15px_rgba(100,116,139,0.4)] enabled:hover:scale-[1.02] enabled:active:scale-95"
+                  : "bg-amber-500 text-white enabled:hover:bg-amber-600 shadow-[0_4px_15px_rgba(245,158,11,0.4)] enabled:hover:scale-[1.02] enabled:active:scale-95"
+              } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+            >
+              {showWinnerBoard ? "隱藏中獎看板" : "顯示中獎看板"}
             </Button>
           </div>
 

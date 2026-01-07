@@ -197,6 +197,6 @@
 
 .board::-webkit-scrollbar { width: 6px; }
 .board::-webkit-scrollbar-thumb {
-  background: #d97706;
+  background: #c31205;
   border-radius: 10px;
 }
