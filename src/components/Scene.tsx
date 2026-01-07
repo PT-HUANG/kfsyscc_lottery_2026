@@ -131,7 +131,6 @@ function GachaScene({
   const showWinnerModal = useLotteryDataStore((state) => state.showWinnerModal);
   const setShowWinnerModal = useLotteryDataStore((state) => state.setShowWinnerModal);
   const skipWinners = useLotteryDataStore((state) => state.skipWinners); // 讀取全域設定
-  const skipAnimation = useLotteryDataStore((state) => state.skipAnimation); // 是否跳過動畫
   const startNewDrawSession = useLotteryDataStore((state) => state.startNewDrawSession); // 開始新的抽獎輪次
   const setCurrentDrawSessionId = useLotteryDataStore((state) => state.setCurrentDrawSessionId); // 設定當前抽獎輪次 ID
 
@@ -461,7 +460,6 @@ function GachaScene({
 
           // 🎯 先保存中獎者資料和顏色（在清除前）
           const winnersToAdd = [...currentWinnersRef.current];
-          const ballColor = floatingBallColor;
 
           // 🎯 立即清除球和視覺元素（在白光前）
           setSelectedBallId(null);
@@ -474,9 +472,11 @@ function GachaScene({
           setTimeout(() => {
             setShowFlash(false);
 
-            // 🎯 結束動畫狀態，讓左右側面板在第一個人揭露時才出現
-            setIsAnimating(false);
-            syncAnimationState(false);
+            // 🎯 白光結束後延遲一小段時間再結束動畫狀態，防止看板與白光重疊
+            setTimeout(() => {
+              setIsAnimating(false);
+              syncAnimationState(false);
+            }, 100);
 
             // 🎯 逐筆揭露中獎者（已在後台寫入，此處僅切換 isRevealed）
             if (winnersToAdd.length > 0) {
@@ -525,7 +525,7 @@ function GachaScene({
                   // 🎯 彈出 Modal 顯示所有中獎者
                   setShowWinnerModal(true);
                   syncWinnerModalState(true);
-                }, 1500);
+                }, 0);
               }
             } else {
               // 沒有中獎者的情況
@@ -679,7 +679,7 @@ function GachaScene({
         </mesh>
       )}
 
-      {/* 金色光閃爍效果（3D 場景全屏金色平面）*/}
+      {/* 白光閃爍效果（3D 場景全屏金色平面）*/}
       {flashOpacity > 0 && (
         <mesh position={[0, 3, 10]} renderOrder={999}>
           <planeGeometry args={[100, 100]} />

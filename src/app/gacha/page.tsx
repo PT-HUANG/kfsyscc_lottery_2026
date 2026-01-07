@@ -19,7 +19,7 @@ export default function GachaPage() {
   } = useLotteryUIStore();
 
   // Data Store
-  const { isAnimating, showWinnerModal, isAnnouncingResults } = useLotteryDataStore();
+  const { isAnimating, showWinnerModal } = useLotteryDataStore();
 
   const handleSceneReady = useCallback(() => {
     setSceneReady(true);
@@ -31,7 +31,7 @@ export default function GachaPage() {
       <Scene onReadyAction={handleSceneReady} />
 
       {/* 左側結果顯示面板 */}
-      {!loading && !showWinnerModal && (
+      {!loading && !showWinnerModal && !isAnimating && (
         <div className="fixed top-3 left-3 z-10 flex flex-col items-stretch gap-2 w-[40vw] md:w-[28vw] max-w-[350px]">
           <WinnerRecordBoard />
         </div>

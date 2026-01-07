@@ -30,7 +30,6 @@ export default function LotteryControlPanel() {
     isAnnouncingResults, // 🎯 公布結果狀態
     showWinnerModal, // 🎯 監控彈窗狀態
     setShowWinnerModal, // 🎯 設定彈窗狀態
-    addWinnerRecord, // 🎯 新增這個解構
   } = useLotteryDataStore();
 
   const { openManagement } = useLotteryUIStore();
