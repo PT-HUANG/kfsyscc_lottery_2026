@@ -42,12 +42,6 @@ export default function GachaPage() {
 
       {/* Loading 畫面 */}
       {loading && <LoadingScene />}
-
-      {!loading && (
-        <div className="hidden sm:block fixed bottom-2 left-1/2 translate-x-[-30%] z-50 text-black text-lg">
-          version: v26.01.07
-        </div>
-      )}
     </>
   );
 }

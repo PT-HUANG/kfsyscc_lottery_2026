@@ -23,10 +23,11 @@ export default function BackstagePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 p-4 md:p-8 flex flex-col gap-6">
-      <header className="flex justify-between items-center mb-4">
+      <header className="flex gap-2 items-center mb-4">
         <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-700 to-orange-600 drop-shadow-sm">
           抽獎後台管理系統
         </h1>
+        <div className="bg-[#7d8492] rounded-[57px] inline-block text-sm ml-[5px] px-[6px] py-[2px] relative -top-[5px] align-super text-white font-bold">v26.01.07</div>
       </header>
 
       <main className="flex flex-col md:flex-row gap-6 items-start max-w-7xl mx-auto w-full">

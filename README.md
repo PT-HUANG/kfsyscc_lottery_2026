@@ -2,10 +2,12 @@
 
 一個專為醫院春酒活動打造的互動式 3D 扭蛋機抽獎系統，結合精美的 3D 動畫與完整的抽獎管理功能。
 
-![Next.js](https://img.shields.io/badge/Next.js-16.1-black)
+![Next.js](https://img.shields.io/badge/Next.js-16.1.0-black)
 ![React](https://img.shields.io/badge/React-19-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Three.js](https://img.shields.io/badge/Three.js-0.182-green)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue)
+![Three.js](https://img.shields.io/badge/Three.js-0.182.0-green)
+![Zustand](https://img.shields.io/badge/Zustand-5.0.9-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 📋 專案簡介
 
@@ -114,9 +116,6 @@ VIP組（10人） + 一般員工組（100人）
   → 只有 VIP組 10人 參與抽獎
   → 一般員工無法中此獎
 
-範例2：「參加獎」無限制
-  → 所有 110人 都可參與
-  → 公平競爭
 ```
 
 #### 4. 驗證機制
@@ -162,14 +161,17 @@ Fisher-Yates 演算法已被數學證明，能產生所有可能排列的機率�
 ### 🎯 核心特色
 
 - **🎨 精美 3D 動畫** - 真實感的扭蛋機晃動、金幣投入、扭蛋掉落等動畫效果
-- **🎭 場景自訂** - 黑色背景、動態霧效、陰影系統，可自訂背景圖片位置與縮放
+- **🎭 4 種主題風格** - Classic（經典金色）、Modern（現代科技）、Elegant（優雅黑金）、Pastel（柔和粉彩）
+- **🖼️ 場景自訂** - 支援自訂背景圖片上傳（IndexedDB 存儲），即時調整位置與縮放
 - **👥 分組抽獎** - 支援參與者分組（VIP組、一般員工等），獎項可限定特定分組
 - **📊 完整資料管理** - 參與者、獎項、中獎紀錄一站式管理
 - **📁 批次匯入** - 支援 TXT 檔案快速匯入參與者與獎項（支援多次上傳不同分組）
 - **🎁 多獎項抽獎** - 可選擇獎項、單次抽一個或抽全部剩餘名額
 - **🔒 防重複中獎** - 自動過濾已中獎者，確保公平性
-- **💾 資料持久化** - 自動儲存，重新整理也不會遺失資料
-- **📤 CSV 匯出** - 一鍵匯出中獎名單，方便後續整理
+- **💾 雙重備份機制** - 自動存 localStorage + 清除前自動下載 JSON 備份
+- **📤 多格式匯出** - CSV 匯出中獎名單、JSON 完整備份（含參與者/獎項/紀錄）
+- **🎬 跳過動畫選項** - 支援直接顯示結果，適合快速抽獎場景
+- **🔄 跨分頁同步** - 前後台分離，即時同步抽獎狀態
 
 ## 🚀 技術棧
 
@@ -232,10 +234,29 @@ Fisher-Yates 演算法已被數學證明，能產生所有可能排列的機率�
   - 獎項名稱高亮顯示
   - 中獎人數統計
   - 姓名 + 員工編號清單
+  - 支援逐筆揭露動畫（多人抽獎時每秒揭露一位）
 - ✅ **完整歷史紀錄** - 管理後台查看所有中獎紀錄
   - 表格式顯示（序號、姓名、員工編號、獎品名稱）
   - CSV 匯出功能（UTF-8，支援中文）
-  - 清除紀錄功能
+  - JSON 完整備份（含參與者、獎項、統計資訊）
+  - 清除紀錄前自動下載備份
+  - 手動下載備份按鈕
+
+### 🎨 主題系統
+
+支援 4 種視覺主題，跨分頁即時同步：
+
+| 主題 | 風格描述 | 主色調 | 適用場景 |
+|------|---------|--------|---------|
+| **Classic** | 經典金色 | 金黃色系 | 傳統喜慶活動、春酒尾牙 |
+| **Modern** | 現代科技 | 藍色科技風 | 科技公司、創新活動 |
+| **Elegant** | 優雅黑金 | 黑金配色 | 高端活動、VIP 場合 |
+| **Pastel** | 柔和粉彩 | 粉嫩色系 | 溫馨活動、親子場合 |
+
+**特色**：
+- 使用 CSS Modules 實現主題隔離
+- 透過 BroadcastChannel 跨分頁同步主題變更
+- 主題設定自動儲存到 localStorage
 
 ### 🎬 3D 動畫系統
 
@@ -245,7 +266,12 @@ Fisher-Yates 演算法已被數學證明，能產生所有可能排列的機率�
 3. **扭蛋彈跳** - 機內扭蛋隨機彈跳與旋轉（物理模擬）
 4. **扭蛋掉落** - 單顆扭蛋從出口滾出
 5. **扭蛋浮起** - 扭蛋緩慢上浮，白光閃爍
-6. **顯示中獎者** - 彈窗顯示中獎者資訊
+6. **中獎揭露** - 左上角中獎看板逐筆顯示（每秒一位）
+7. **顯示彈窗** - 所有中獎者揭露完畢後彈出 WinnerModal
+
+**跳過動畫選項**：
+- 啟用後直接顯示中獎結果，無需等待動畫
+- 適用於快速抽獎或測試場景
 
 #### 視覺效果
 - ✅ **進階渲染**：
@@ -278,14 +304,45 @@ Fisher-Yates 演算法已被數學證明，能產生所有可能排列的機率�
   - 即時調整背景圖片縮放大小
   - 支援自訂背景圖片（放置於 `/public/GachaBG.png`）
 
-### 💾 資料持久化
+### 💾 資料持久化與備份
 
-- 使用 Zustand Persist Middleware + localStorage
-- 自動儲存：
-  - 參與者名單
-  - 獎項設定
-  - 中獎紀錄
+#### 自動持久化（localStorage）
+- 使用 Zustand Persist Middleware
+- 5 個獨立 Store 自動儲存：
+  - `kfsyscc-lottery-storage` - 參與者、獎項、中獎紀錄、設定
+  - `lottery-selection` - 選擇狀態（獎項、分組、模式）
+  - `lottery-ui` - UI 面板狀態
+  - `lottery-theme-storage` - 主題設定
+  - `background-config` - 背景配置
 - 重新整理頁面資料不遺失
+
+#### 手動備份機制
+- ✅ **CSV 匯出** - 匯出中獎名單（適合列印、整理）
+- ✅ **JSON 完整備份** - 包含所有資料與統計資訊
+  ```json
+  {
+    "exportDate": "2026-01-07T...",
+    "version": "1.0",
+    "data": {
+      "winnerRecords": [...],
+      "participants": [...],
+      "prizes": [...]
+    },
+    "statistics": {
+      "totalWinners": 100,
+      "totalParticipants": 500,
+      "totalPrizes": 10
+    }
+  }
+  ```
+- ✅ **自動備份** - 清除紀錄前自動下載 JSON 備份
+- ✅ **手動備份** - 隨時點擊「下載備份 JSON」按鈕
+
+#### 自訂背景圖片存儲（IndexedDB）
+- 使用 IndexedDB 存儲自訂背景圖片（避免 localStorage 5MB 限制）
+- 支援 PNG, JPG, JPEG, WebP 格式
+- 最大檔案大小：10MB
+- 自動計算長寬比，避免變形
 
 ### 🔄 跨頁籤狀態同步
 
@@ -485,68 +542,204 @@ pnpm start
 
 ```
 kfsyscc_lottery_2026/
-├── public/
-│   ├── models/              # 3D 模型檔案
-│   ├── GachaBG.png          # 背景圖片（可自訂替換）
+├── public/                   # 靜態資源
+│   ├── models/               # 3D 模型檔案（GLTF）
+│   │   └── gacha_machine.glb
+│   ├── *.png                 # 預設背景圖片（OfficeBG, GachaBG）
+│   ├── Confetti.json         # Lottie 彩帶動畫
 │   ├── sample-participants.txt
 │   └── sample-prizes.txt
 ├── src/
-│   ├── app/
-│   │   ├── gacha/           # 抽獎展示頁面
-│   │   │   ├── page.tsx     # 主頁面（含 UI 控制、分組選擇）
-│   │   │   └── loading.css  # 加載動畫樣式
-│   │   ├── backstage/       # 後台控制頁面（跨頁籤控制）
-│   │   │   └── page.tsx     # 控制介面
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── globals.css
-│   ├── components/
-│   │   ├── Scene.tsx        # 3D 場景主組件（含背景、霧效、陰影）
-│   │   ├── GachaMachine.tsx # 扭蛋機模型
-│   │   ├── GachaBall.tsx    # 扭蛋球（物理）
-│   │   ├── Coin.tsx         # 3D 金幣
-│   │   ├── CameraAnimation.tsx
+│   ├── app/                  # Next.js App Router
+│   │   ├── layout.tsx        # 根佈局（Geist 字體）
+│   │   ├── page.tsx          # 首頁（啟動頁面）
+│   │   ├── globals.css       # 全局樣式
+│   │   ├── start.css         # 首頁動畫
+│   │   ├── gacha/            # 前台抽獎頁面
+│   │   │   ├── page.tsx
+│   │   │   └── loading.css
+│   │   └── backstage/        # 後台管理頁面
+│   │       └── page.tsx
+│   ├── components/           # React 組件（20+ 個）
+│   │   ├── ui/               # shadcn/ui 基礎組件
+│   │   │   ├── button.tsx
+│   │   │   └── dialog.tsx
+│   │   ├── Scene.tsx         # 3D 場景容器
+│   │   ├── GachaMachine.tsx  # 扭蛋機 3D 模型
+│   │   ├── GachaBall.tsx     # 扭蛋球（物理引擎）
+│   │   ├── PhysicsContainer.tsx
+│   │   ├── Coin.tsx          # 金幣動畫
 │   │   ├── FloatingText.tsx
-│   │   ├── WinnerModal.tsx  # 中獎彈窗（支援單人/多人）
-│   │   ├── WinnerRecordBoard.tsx # 本輪中獎顯示（含分組）
-│   │   ├── ManagementModal.tsx   # 管理後台彈窗
-│   │   ├── ParticipantUpload.tsx # 參與者上傳（含分組輸入）
-│   │   ├── ParticipantList.tsx   # 參與者列表（顯示分組）
-│   │   ├── PrizeUpload.tsx       # 獎項上傳（可設定分組限制）
-│   │   ├── PrizeList.tsx         # 獎項列表（顯示分組限制）
-│   │   ├── WinnerRecordsList.tsx # 中獎紀錄列表
-│   │   ├── FloatingBackgroundPanel.tsx # 浮動背景設定面板
-│   │   ├── LotteryControlPanel.tsx     # 抽獎控制面板（控制頁專用）
-│   │   └── ui/              # Shadcn UI 組件
-│   ├── hooks/
-│   │   ├── useLotteryLogic.ts    # 抽獎邏輯 Hook（支援分組篩選）
-│   │   ├── useLotteryRemote.ts   # 🔄 遠端控制 Hook（發送端）
-│   │   ├── useLotteryReceiver.ts # 🔄 遠端接收 Hook（接收端）
-│   │   └── useStorageSync.ts     # 🔄 localStorage 同步 Hook
-│   ├── stores/
-│   │   ├── useLotteryDataStore.ts # Zustand Store（資料狀態）
-│   │   └── useLotteryUIStore.ts   # Zustand Store（UI 狀態）
-│   ├── utils/
-│   │   └── lotteryChannel.ts     # 🔄 BroadcastChannel 通訊層
+│   │   ├── CameraAnimation.tsx
+│   │   ├── LoadingScene.tsx
+│   │   ├── WinnerModal.tsx   # 中獎彈窗
+│   │   ├── WinnerRecordBoard.tsx  # 中獎看板
+│   │   ├── WinnerRecordsList.tsx  # 中獎列表（含備份功能）
+│   │   ├── LotteryControlPanel.tsx
+│   │   ├── LotterySettings.tsx
+│   │   ├── ManagementModal.tsx
+│   │   ├── ParticipantList.tsx
+│   │   ├── ParticipantUpload.tsx
+│   │   ├── PrizeList.tsx
+│   │   ├── PrizeUpload.tsx
+│   │   ├── ThemeSelector.tsx  # 主題選擇器
+│   │   ├── DrawModeButton.tsx
+│   │   └── FloatingBackgroundPanel.tsx
+│   ├── stores/               # Zustand 狀態管理（5 個 Store）
+│   │   ├── useLotteryDataStore.ts      # 抽獎數據
+│   │   ├── useLotteryUIStore.ts        # UI 狀態
+│   │   ├── useLotterySelectionStore.ts # 選擇狀態
+│   │   ├── useThemeStore.ts            # 主題狀態
+│   │   └── useBackgroundStore.ts       # 背景配置
+│   ├── hooks/                # 自定義 Hooks（5 個）
+│   │   ├── useLotteryLogic.ts    # 抽獎邏輯（Fisher-Yates）
+│   │   ├── useLotteryRemote.ts   # 跨分頁發送
+│   │   ├── useLotteryReceiver.ts # 跨分頁接收
+│   │   ├── useStorageSync.ts     # localStorage 同步
+│   │   └── useThemeSync.ts       # 主題同步
+│   ├── utils/                # 工具函數
+│   │   ├── lotteryChannel.ts  # BroadcastChannel（抽獎）
+│   │   ├── themeChannel.ts    # BroadcastChannel（主題）
+│   │   └── imageStorage.ts    # IndexedDB 圖片存儲
 │   ├── types/
-│   │   └── lottery.ts            # TypeScript 類型定義
-│   └── config/
-│       └── gachaConfig.ts   # 動畫配置參數
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-└── package.json
+│   │   └── lottery.ts         # TypeScript 類型定義
+│   ├── config/
+│   │   └── gachaConfig.ts     # 扭蛋機參數配置
+│   ├── lib/
+│   │   └── utils.ts           # cn() 工具函數
+│   └── styles/
+│       └── themes/            # 主題樣式（4 種）
+│           ├── classic.module.css
+│           ├── modern.module.css
+│           ├── elegant.module.css
+│           └── pastel.module.css
+├── next.config.ts             # Next.js 配置
+├── tailwind.config.ts         # Tailwind CSS 配置
+├── tsconfig.json              # TypeScript 配置
+├── eslint.config.mjs          # ESLint 配置
+├── package.json               # 依賴管理
+├── pnpm-lock.yaml
+└── CLAUDE.md                  # AI 輔助開發文檔
 ```
+
+## 🏗️ 系統架構
+
+### 整體架構圖
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    使用者介面層 (UI Layer)                    │
+├──────────────────────┬──────────────────────────────────────┤
+│  首頁 (/)            │  前台 (/gacha)     │  後台 (/backstage)│
+│  - 啟動頁面          │  - 3D 場景         │  - 控制面板       │
+│                      │  - 中獎看板        │  - 主題選擇器     │
+│                      │  - 接收指令        │  - 背景設定       │
+└──────────────────────┴────────────────────┴──────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                 狀態管理層 (State Layer)                      │
+├──────────────┬──────────────┬──────────────┬────────────────┤
+│ LotteryData  │ Selection    │ UI           │ Theme / BG     │
+│ - 參與者     │ - 選擇獎項   │ - Modal      │ - 主題設定     │
+│ - 獎項       │ - 選擇分組   │ - Loading    │ - 背景配置     │
+│ - 中獎紀錄   │ - 抽獎模式   │ - Panel      │                │
+└──────────────┴──────────────┴──────────────┴────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   業務邏輯層 (Logic Layer)                    │
+├──────────────────────┬──────────────────────────────────────┤
+│  抽獎邏輯            │  通訊層                               │
+│  - Fisher-Yates     │  - BroadcastChannel (即時)            │
+│  - 分組篩選          │  - localStorage (持久化)              │
+│  - 防重複中獎        │  - Remote / Receiver Hooks           │
+└──────────────────────┴──────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   渲染層 (Render Layer)                       │
+├──────────────────────┬──────────────────────────────────────┤
+│  3D 渲染 (Three.js)  │  UI 渲染 (React)                      │
+│  - 扭蛋機模型        │  - Tailwind CSS                       │
+│  - 物理引擎          │  - shadcn/ui                          │
+│  - 動畫系統          │  - CSS Modules                        │
+└──────────────────────┴──────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   存儲層 (Storage Layer)                      │
+├──────────────────────┬──────────────────────────────────────┤
+│  localStorage        │  IndexedDB                            │
+│  - 5 個 Store 資料   │  - 自訂背景圖片                       │
+│  - 自動持久化        │  - 最大 10MB                          │
+└──────────────────────┴──────────────────────────────────────┘
+```
+
+### 資料流向
+
+#### 前台抽獎流程
+```
+後台操作 → 執行抽獎邏輯 → 批量寫入 Store → 發送 BroadcastChannel
+                                              ↓
+前台接收 → 立即寫入 Store → 啟動 3D 動畫 → 逐筆揭露中獎者
+                                              ↓
+                           所有揭露完成 → 彈出 WinnerModal
+```
+
+#### 狀態同步流程
+```
+任一分頁修改 Store
+        ↓
+Zustand Persist 自動寫入 localStorage
+        ↓
+觸發 storage 事件
+        ↓
+其他分頁監聽到事件 (useStorageSync)
+        ↓
+自動 rehydrate Store
+        ↓
+UI 自動更新
+```
+
+### 核心模組
+
+| 模組 | 職責 | 主要檔案 |
+|------|------|---------|
+| **狀態管理** | 全域狀態、持久化 | `stores/*.ts` (5 個 Store) |
+| **抽獎邏輯** | Fisher-Yates、驗證 | `hooks/useLotteryLogic.ts` |
+| **跨分頁通訊** | 即時同步、指令傳遞 | `utils/*Channel.ts`, `hooks/use*Sync.ts` |
+| **3D 渲染** | 場景、模型、動畫 | `components/Scene.tsx`, `components/Gacha*.tsx` |
+| **UI 組件** | 控制面板、列表、彈窗 | `components/*.tsx` (20+ 個) |
+| **主題系統** | 4 種風格切換 | `styles/themes/*.module.css` |
+| **資料存儲** | localStorage + IndexedDB | `utils/imageStorage.ts` |
 
 ## 🎨 設計特色
 
 ### 技術亮點
-- **React Compiler** - 自動優化效能，支援複雜動畫流暢運行
-- **物理引擎整合** - 使用 @react-three/rapier 實現真實的扭蛋彈跳效果
-- **跨頁籤狀態同步** - BroadcastChannel + localStorage 實現雙螢幕抽獎體驗
-- **模組化設計** - 組件獨立可復用，易於維護擴展
-- **TypeScript 全覆蓋** - 完整的類型定義，降低錯誤率
-- **狀態管理最佳實踐** - Zustand + Persist，簡潔高效
+- **🚀 效能優化**
+  - Next.js 16 App Router + React 19
+  - Three.js 0.182 WebGL 渲染
+  - Zustand 輕量級狀態管理（5 個模組化 Store）
+  - 物理引擎 Rapier 高效碰撞檢測
+- **🎨 視覺系統**
+  - 4 種主題風格 + CSS Modules 隔離
+  - 自訂背景圖片上傳（IndexedDB 存儲）
+  - HDR 環境照明 + 即時陰影
+  - Lottie 動畫 + 流暢相機運鏡
+- **🔄 跨分頁通訊**
+  - BroadcastChannel 即時同步
+  - localStorage 持久化備援
+  - 5 個 Hooks 實現通訊層（Remote + Receiver + Sync）
+- **💾 資料管理**
+  - localStorage 自動持久化（Zustand Persist）
+  - IndexedDB 圖片存儲（支援 10MB）
+  - JSON 完整備份（含統計資訊）
+  - CSV 匯出（UTF-8 BOM 中文支援）
+- **🎯 抽獎演算法**
+  - Fisher-Yates Shuffle（數學證明無偏）
+  - 分組篩選 + 防重複中獎
+  - 完整驗證機制
+- **🛡️ 類型安全**
+  - TypeScript 5.9.3 嚴格模式
+  - 完整類型定義（Participant、Prize、WinnerRecord）
+  - ESLint Next.js 官方配置
 
 ### UX 設計
 - **直覺操作** - 獎項選擇、抽獎模式一目了然
@@ -687,9 +880,39 @@ A: 支援，但建議使用桌機以獲得最佳體驗（3D 效能、螢幕大�
 - 使用 Tailwind CSS 進行樣式設計
 - 提交前執行 `pnpm lint` 檢查代碼
 
+## 📝 更新日誌
+
+### v26.01.07 (2026-01-07)
+- ✅ 新增主題系統（4 種風格：Classic、Modern、Elegant、Pastel）
+- ✅ 新增自訂背景圖片上傳功能（IndexedDB 存儲）
+- ✅ 新增 JSON 完整備份功能（含統計資訊）
+- ✅ 新增清除紀錄前自動下載備份
+- ✅ 新增手動下載備份按鈕
+- ✅ 新增跳過動畫選項
+- ✅ 新增逐筆揭露中獎者動畫
+- ✅ 新增抽獎輪次管理（drawSessionId）
+- ✅ 優化跨分頁同步機制
+- ✅ 優化中獎看板顯示邏輯
+- ✅ 完善 TypeScript 類型定義
+- ✅ 更新 README.md 文檔
+
+### 未來規劃
+- 🔄 整合 MongoDB Atlas 雲端資料庫（選用）
+- 🔄 支援匯入 JSON 備份恢復資料
+- 🔄 支援自訂音效
+- 🔄 支援多語言（英文、日文）
+- 🔄 PWA 離線支援
+
 ## 🤝 貢獻
 
 歡迎提交 Issue 或 Pull Request！
+
+建議的貢獻方向：
+- 🐛 回報 Bug 或改進建議
+- 📖 改善文檔說明
+- 🎨 新增主題風格
+- 🌐 多語言支援
+- ⚡ 效能優化
 
 ## 📄 授權
 

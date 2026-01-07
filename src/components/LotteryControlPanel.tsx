@@ -458,7 +458,7 @@ export default function LotteryControlPanel() {
                   : "bg-gray-100 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed hover:bg-gray-100"
               }`}
             >
-              關閉中獎彈窗
+              關閉中獎視窗
             </Button>
           </div>
 

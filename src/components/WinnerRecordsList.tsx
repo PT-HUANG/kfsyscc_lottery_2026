@@ -1,5 +1,4 @@
 "use client";
-
 import { useLotteryDataStore } from "@/stores/useLotteryDataStore";
 
 export default function WinnerRecordsList() {
@@ -10,7 +9,7 @@ export default function WinnerRecordsList() {
   );
 
   // 獲取獎品名稱（優先通過 prizeId 查找，如果找不到則使用備份名稱）
-  const getPrizeName = (record: typeof winnerRecords[0]) => {
+  const getPrizeName = (record: (typeof winnerRecords)[0]) => {
     if (record.prizeId) {
       const prize = prizes.find((p) => p.id === record.prizeId);
       if (prize) return prize.name;
@@ -18,15 +17,52 @@ export default function WinnerRecordsList() {
     return record.prize; // 備份顯示
   };
 
+  // 下載 JSON 備份
+  const handleDownloadBackup = () => {
+    const participants = useLotteryDataStore.getState().participants;
+
+    const backupData = {
+      exportDate: new Date().toISOString(),
+      version: "1.0",
+      data: {
+        winnerRecords: winnerRecords,
+        participants: participants,
+        prizes: prizes,
+      },
+      statistics: {
+        totalWinners: winnerRecords.length,
+        totalParticipants: participants.length,
+        totalPrizes: prizes.length,
+      }
+    };
+
+    const jsonString = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `抽獎備份_${new Date().toISOString().split("T")[0]}_${Date.now()}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   const handleClearAll = () => {
     if (winnerRecords.length === 0) return;
 
     if (
       confirm(
-        `確定要清除所有 ${winnerRecords.length} 筆中獎紀錄嗎？此操作無法復原。`
+        `確定要清除所有 ${winnerRecords.length} 筆中獎紀錄嗎？\n系統將先自動下載 JSON 備份檔案。`
       )
     ) {
-      clearWinnerRecords();
+      // 先下載備份
+      handleDownloadBackup();
+
+      // 稍微延遲後再清除（確保下載完成）
+      setTimeout(() => {
+        clearWinnerRecords();
+      }, 300);
     }
   };
 
@@ -70,6 +106,7 @@ export default function WinnerRecordsList() {
   const sortedRecords = [...winnerRecords].sort(
     (a, b) => b.timestamp - a.timestamp
   );
+
 
   return (
     <div className="w-full space-y-4">
