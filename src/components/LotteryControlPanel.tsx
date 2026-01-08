@@ -473,7 +473,7 @@ export default function LotteryControlPanel() {
           <div>
             <Button
               onClick={handleToggleWinnerBoard}
-              disabled={isAnimating}
+              disabled={isAnimating || winnerRecords.length === 0}
               className={`w-full text-base font-bold py-6 rounded-lg border-0 transition-all duration-200 ${
                 showWinnerBoard
                   ? "bg-slate-500 text-white enabled:hover:bg-slate-600 shadow-[0_4px_15px_rgba(100,116,139,0.4)] enabled:hover:scale-[1.02] enabled:active:scale-95"
